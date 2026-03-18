@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic SEO -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Valve Sizing Calculator | Alatau Tech Consulting</title>
+  <meta name="description" content="Estimate control valve Cv for liquid and gas service, detect likely choked flow, and screen valve opening / oversizing risk for industrial applications.">
+  <meta name="keywords" content="control valve sizing calculator, Cv calculator, Kv calculator, liquid valve sizing, gas valve sizing, choked flow, valve oversizing">
+  <meta name="author" content="Alatau Tech Consulting">
+  <link rel="canonical" href="https://alatau.tech/control-valve-sizing-calculator.html">
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .language-bar {
+      background: #f1f1f1;
+      text-align: right;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .language-bar a {
+      text-decoration: none;
+      margin: 0 0.5rem;
+      color: #003366;
+      font-weight: 600;
+    }
+
+    nav {
+      background: #003366;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-weight: 600;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 2rem;
+      background: #003366;
+      color: #fff;
+      min-height: 40vh;
+    }
+
+    .hero-text {
+      flex: 1 1 600px;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    .hero-text h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero-text p {
+      font-size: 1.05rem;
+      margin: 0 auto;
+      max-width: 760px;
+    }
+
+    section {
+      padding: 3rem 1.25rem;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 1.5rem;
+    }
+
+    .calc-layout {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #003366;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 1rem 1.2rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field label {
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: #003366;
+      font-size: 0.95rem;
+    }
+
+    .field input,
+    .field select {
+      padding: 0.75rem;
+      border: 1px solid #cfd6de;
+      border-radius: 8px;
+      font-size: 0.96rem;
+      background: #fff;
+    }
+
+    .field small {
+      margin-top: 0.3rem;
+      color: #666;
+      font-size: 0.82rem;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    button {
+      padding: 0.9rem 1.25rem;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .result-box {
+      background: #f8fbff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .result-box .label {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0.35rem;
+    }
+
+    .result-box .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #003366;
+    }
+
+    .message-list {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .message-list li {
+      margin-bottom: 0.7rem;
+    }
+
+    .warning {
+      color: #a15c00;
+      font-weight: 600;
+    }
+
+    .good {
+      color: #0b6b2f;
+      font-weight: 600;
+    }
+
+    .bad {
+      color: #a00000;
+      font-weight: 600;
+    }
+
+    .note {
+      background: #eef5fb;
+      border-left: 4px solid #003366;
+      padding: 1rem 1rem 1rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .chart-wrap {
+      margin-top: 1.25rem;
+    }
+
+    .chart-box {
+      background: #fff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      display: block;
+      background: #fff;
+      border-radius: 8px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    footer {
+      background: #003366;
+      color: #fff;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 900px) {
+      .calc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid,
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        justify-content: center;
+      }
+
+      .hero-text h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Control Valve Sizing Calculator",
+    "url": "https://alatau.tech/control-valve-sizing-calculator.html",
+    "description": "Estimate control valve Cv for liquid and gas service and flag likely choked flow or valve oversizing risk.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Alatau Tech Consulting",
+      "url": "https://alatau.tech"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <div class="language-bar">
+    <a href="index-kz.html" onclick="document.cookie='langPref=kk; path=/';">
+      <img src="flags/kz.png" alt="KZ" style="height:16px; vertical-align:middle;"> KZ
+    </a> |
+    <a href="index.html" onclick="document.cookie='langPref=en; path=/';">
+      <img src="flags/gb.png" alt="EN" style="height:16px; vertical-align:middle;"> EN
+    </a> |
+    <a href="index-ru.html" onclick="document.cookie='langPref=ru; path=/';">
+      <img src="flags/ru.png" alt="RU" style="height:16px; vertical-align:middle;"> RU
+    </a>
+  </div>
+
+  <nav>
+    <div><a href="index.html">Alatau Tech Consulting</a></div>
+    <div>
+      <a href="index.html#about">About</a>
+      <a href="index.html#services">Services</a>
+      <a href="index.html#industries">Industries</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </nav>
+
+  <header>
+    <div class="hero-text">
+      <h1>Control Valve Sizing Calculator</h1>
+      <p>
+        Estimate required Cv and Kv for liquid or gas service, compare against installed valve Cv,
+        screen likely valve opening, and flag potential choked flow or oversizing risk.
+      </p>
+    </div>
+  </header>
+
+  <section>
+    <div class="note">
+      <strong>Scope of this version:</strong> This is a practical screening tool, not a full ISA-compliant sizing package.
+      It is designed to support early engineering checks for liquid and gas service. Real projects should still confirm
+      vendor data, noise, cavitation, flashing, actuator sizing, and full trim selection.
+    </div>
+  </section>
+
+  <section>
+    <h2>Calculator</h2>
+
+    <div class="calc-layout">
+      <div class="card">
+        <h3>Input Data</h3>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="serviceType">Service Type</label>
+            <select id="serviceType" onchange="toggleServiceFields()">
+              <option value="liquid" selected>Liquid</option>
+              <option value="gas">Gas</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="characteristic">Valve Characteristic</label>
+            <select id="characteristic">
+              <option value="equal" selected>Equal Percentage</option>
+              <option value="linear">Linear</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="flowValue">Flow Rate</label>
+            <input type="number" id="flowValue" value="100" step="any">
+          </div>
+
+          <div class="field">
+            <label for="flowUnit">Flow Unit</label>
+            <select id="flowUnit">
+              <option value="m3h" selected>m³/h</option>
+              <option value="m3s">m³/s</option>
+              <option value="lps">L/s</option>
+              <option value="scfh">SCFH</option>
+              <option value="nm3h">Nm³/h</option>
+            </select>
+          </div>
+
+          <!-- Liquid fields -->
+          <div class="field liquid-field">
+            <label for="sgLiquid">Liquid Specific Gravity</label>
+            <input type="number" id="sgLiquid" value="1.0" step="any">
+            <small>Water = 1.0</small>
+          </div>
+
+          <div class="field liquid-field">
+            <label for="flLiquid">Valve FL Factor</label>
+            <input type="number" id="flLiquid" value="0.9" step="any">
+            <small>Typical screening value</small>
+          </div>
+
+          <div class="field liquid-field">
+            <label for="pvLiquid">Liquid Vapor Pressure (bar abs)</label>
+            <input type="number" id="pvLiquid" value="0.03" step="any">
+          </div>
+
+          <div class="field liquid-field">
+            <label for="p1Liquid">Upstream Pressure P1 (bar abs)</label>
+            <input type="number" id="p1Liquid" value="6" step="any">
+          </div>
+
+          <div class="field liquid-field">
+            <label for="p2Liquid">Downstream Pressure P2 (bar abs)</label>
+            <input type="number" id="p2Liquid" value="5" step="any">
+          </div>
+
+          <!-- Gas fields -->
+          <div class="field gas-field hidden">
+            <label for="sgGas">Gas Specific Gravity (air = 1)</label>
+            <input type="number" id="sgGas" value="0.6" step="any">
+            <small>Natural gas often around 0.55–0.7</small>
+          </div>
+
+          <div class="field gas-field hidden">
+            <label for="temperatureGas">Gas Temperature (°C)</label>
+            <input type="number" id="temperatureGas" value="25" step="any">
+          </div>
+
+          <div class="field gas-field hidden">
+            <label for="zFactor">Compressibility Factor Z</label>
+            <input type="number" id="zFactor" value="1" step="any">
+          </div>
+
+          <div class="field gas-field hidden">
+            <label for="xtGas">Valve Xt Factor</label>
+            <input type="number" id="xtGas" value="0.7" step="any">
+            <small>Typical screening value</small>
+          </div>
+
+          <div class="field gas-field hidden">
+            <label for="gammaGas">Ratio of Specific Heats k</label>
+            <input type="number" id="gammaGas" value="1.3" step="any">
+          </div>
+
+          <div class="field gas-field hidden">
+            <label for="p1Gas">Upstream Pressure P1 (bar abs)</label>
+            <input type="number" id="p1Gas" value="6" step="any">
+          </div>
+
+          <div class="field gas-field hidden">
+            <label for="p2Gas">Downstream Pressure P2 (bar abs)</label>
+            <input type="number" id="p2Gas" value="4.5" step="any">
+          </div>
+
+          <div class="field gas-field hidden">
+            <label for="yFactor">Expansion Factor Y (optional override)</label>
+            <input type="number" id="yFactor" value="" step="any" placeholder="Leave blank for auto">
+          </div>
+
+          <!-- Shared installed valve data -->
+          <div class="field">
+            <label for="installedCv">Installed Valve Rated Cv (optional)</label>
+            <input type="number" id="installedCv" value="120" step="any">
+            <small>Used for opening estimate and oversizing check</small>
+          </div>
+
+          <div class="field">
+            <label for="travelTarget">Preferred Normal Opening (%)</label>
+            <input type="number" id="travelTarget" value="70" step="any">
+            <small>Common screening target for control quality</small>
+          </div>
+
+          <div class="field full-width">
+            <label for="notes">Optional Internal Notes</label>
+            <input type="text" id="notes" placeholder="Tag, service name, or case note">
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" onclick="calculateValve()">Calculate</button>
+          <button type="button" class="btn-secondary" onclick="resetValveCalculator()">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Results</h3>
+
+        <div class="results-grid">
+          <div class="result-box">
+            <div class="label">Required Cv</div>
+            <div class="value" id="cvResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Required Kv</div>
+            <div class="value" id="kvResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Pressure Drop ΔP</div>
+            <div class="value" id="dpResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Choked Flow Status</div>
+            <div class="value" id="chokedResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Estimated Opening</div>
+            <div class="value" id="openingResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Oversizing / Undersizing Check</div>
+            <div class="value" id="sizingStatusResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Available Pressure Ratio</div>
+            <div class="value" id="ratioResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Flow Coefficient Utilization</div>
+            <div class="value" id="utilizationResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Recommended Rated Cv</div>
+            <div class="value" id="recommendedCvResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Recommended Rated Kv</div>
+            <div class="value" id="recommendedKvResult">-</div>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <h3 style="margin-top:1.5rem;">Valve Opening Visualization</h3>
+          <div class="chart-box">
+            <canvas id="valveCanvas" width="520" height="320"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Engineering Interpretation</h2>
+    <div class="card">
+      <ul class="message-list" id="interpretationList">
+        <li>Enter your data and click <strong>Calculate</strong>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h3>Need a deeper review?</h3>
+      <p>
+        If the valve appears oversized, nearly shut during normal operation, or close to choked conditions,
+        that can drive poor control, oscillation, noise, and hidden OPEX losses.
+      </p>
+      <p>
+        Alatau Tech Consulting supports valve review, loop performance troubleshooting, control improvement,
+        and practical optimization studies for plant operations.
+      </p>
+      <p style="margin-bottom:0;">
+        <a href="index.html#contact" style="color:#003366; font-weight:700; text-decoration:none;">Go to Contact Page</a>
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div style="font-size: 0.95rem;">
+      &copy; 2025 Alatau Tech Consulting. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    function fmt(value, decimals = 2) {
+      if (!isFinite(value)) return "-";
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function toggleServiceFields() {
+      const serviceType = document.getElementById("serviceType").value;
+      const liquidFields = document.querySelectorAll(".liquid-field");
+      const gasFields = document.querySelectorAll(".gas-field");
+
+      liquidFields.forEach(field => {
+        field.classList.toggle("hidden", serviceType !== "liquid");
+      });
+
+      gasFields.forEach(field => {
+        field.classList.toggle("hidden", serviceType !== "gas");
+      });
+    }
+
+    function convertFlowToM3h(value, unit) {
+      if (unit === "m3h") return value;
+      if (unit === "m3s") return value * 3600;
+      if (unit === "lps") return value * 3.6;
+      if (unit === "nm3h") return value;
+      if (unit === "scfh") return value * 0.0283168;
+      return value;
+    }
+
+    function cvToKv(cv) {
+      return cv * 0.865;
+    }
+
+    function estimateOpeningPercent(requiredCv, installedCv, characteristic) {
+      if (!isFinite(installedCv) || installedCv <= 0 || !isFinite(requiredCv) || requiredCv <= 0) {
+        return null;
+      }
+
+      const ratio = requiredCv / installedCv;
+
+      if (characteristic === "linear") {
+        return Math.max(0, Math.min(100, ratio * 100));
+      }
+
+      const R = 50;
+      const x = Math.log(Math.max(ratio, 0.001)) / Math.log(R);
+      return Math.max(0, Math.min(100, x * 100));
+    }
+
+    function estimateRecommendedRatedCv(requiredCv, travelTarget, characteristic) {
+      const targetFrac = Math.max(0.15, Math.min(0.95, travelTarget / 100));
+
+      if (characteristic === "linear") {
+        return requiredCv / targetFrac;
+      }
+
+      const R = 50;
+      return requiredCv / Math.pow(R, targetFrac - 1);
+    }
+
+    function drawValveChart(requiredCv, installedCv, openingPercent, characteristic) {
+      const canvas = document.getElementById("valveCanvas");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const margin = { top: 25, right: 25, bottom: 50, left: 60 };
+      const plotW = w - margin.left - margin.right;
+      const plotH = h - margin.top - margin.bottom;
+
+      function xScale(x) {
+        return margin.left + (x / 100) * plotW;
+      }
+
+      function yScale(y) {
+        return margin.top + plotH - y * plotH;
+      }
+
+      // axes
+      ctx.strokeStyle = "#003366";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, margin.top);
+      ctx.lineTo(margin.left, margin.top + plotH);
+      ctx.lineTo(margin.left + plotW, margin.top + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = "#333";
+      ctx.font = "12px Poppins";
+      ctx.fillText("Valve opening (%)", margin.left + plotW / 2 - 40, h - 12);
+
+      ctx.save();
+      ctx.translate(18, margin.top + plotH / 2 + 20);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("Normalized Cv", 0, 0);
+      ctx.restore();
+
+      // preferred band
+      ctx.fillStyle = "rgba(0, 51, 102, 0.09)";
+      ctx.fillRect(xScale(50), margin.top, xScale(80) - xScale(50), plotH);
+
+      // curve
+      ctx.strokeStyle = "#003366";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i <= 100; i++) {
+        let yNorm;
+        if (characteristic === "linear") {
+          yNorm = i / 100;
+        } else {
+          const R = 50;
+          yNorm = Math.pow(R, (i / 100) - 1);
+        }
+
+        const x = xScale(i);
+        const y = yScale(Math.max(0, Math.min(1, yNorm)));
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      if (isFinite(openingPercent)) {
+        let yNorm;
+        if (characteristic === "linear") {
+          yNorm = openingPercent / 100;
+        } else {
+          const R = 50;
+          yNorm = Math.pow(R, (openingPercent / 100) - 1);
+        }
+
+        const px = xScale(openingPercent);
+        const py = yScale(Math.max(0, Math.min(1, yNorm)));
+
+        ctx.fillStyle = "#a00000";
+        ctx.beginPath();
+        ctx.arc(px, py, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillText("Estimated operating point", Math.min(w - 140, px + 8), Math.max(margin.top + 18, py - 10));
+      }
+
+      // x ticks
+      ctx.fillStyle = "#555";
+      ctx.font = "11px Poppins";
+      for (let i = 0; i <= 5; i++) {
+        const xVal = i * 20;
+        const x = xScale(xVal);
+        ctx.beginPath();
+        ctx.moveTo(x, margin.top + plotH);
+        ctx.lineTo(x, margin.top + plotH + 5);
+        ctx.strokeStyle = "#003366";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillText(xVal + "%", x - 10, margin.top + plotH + 18);
+      }
+
+      // text summary
+      ctx.fillStyle = "#0b6b2f";
+      ctx.font = "12px Poppins";
+      ctx.fillText("Preferred normal range", xScale(53), margin.top + 16);
+
+      if (isFinite(requiredCv)) {
+        ctx.fillStyle = "#333";
+        ctx.fillText("Required Cv: " + fmt(requiredCv, 1), margin.left + 8, margin.top + 32);
+      }
+
+      if (isFinite(installedCv) && installedCv > 0) {
+        ctx.fillText("Installed Cv: " + fmt(installedCv, 1), margin.left + 8, margin.top + 48);
+      }
+    }
+
+    function calculateLiquidCv(Qm3h, sg, dpBar) {
+      // Practical screening formula:
+      // Q (m3/h) = 0.865 * Cv * sqrt(ΔP(bar) / SG)
+      return Qm3h / (0.865 * Math.sqrt(dpBar / sg));
+    }
+
+    function calculateGasCv(Qnm3h, sgGas, p1BarAbs, dpBar, temperatureC, z, yUsed) {
+      // Practical screening gas sizing approximation:
+      // Qn (Nm3/h) = 1360 * Cv * Y * P1(bar abs) * sqrt( x / (SG * T(K) * Z) )
+      // where x = dP/P1
+      const T = temperatureC + 273.15;
+      const x = dpBar / p1BarAbs;
+      const denominator = 1360 * yUsed * p1BarAbs * Math.sqrt(x / (sgGas * T * z));
+      return Qnm3h / denominator;
+    }
+
+    function calculateValve() {
+      const serviceType = document.getElementById("serviceType").value;
+      const characteristic = document.getElementById("characteristic").value;
+      const flowValue = parseFloat(document.getElementById("flowValue").value);
+      const flowUnit = document.getElementById("flowUnit").value;
+      const installedCv = parseFloat(document.getElementById("installedCv").value);
+      const travelTarget = parseFloat(document.getElementById("travelTarget").value);
+
+      if (!isFinite(flowValue) || flowValue <= 0 || !isFinite(travelTarget) || travelTarget <= 0 || travelTarget >= 100) {
+        alert("Please enter valid flow and preferred opening values.");
+        return;
+      }
+
+      let requiredCv;
+      let requiredKv;
+      let dpBar;
+      let choked = false;
+      let ratioText = "-";
+      let chokedText = "No";
+      let openingPercent = null;
+      let sizingStatus = "-";
+      let utilization = "-";
+      let recommendedCv = null;
+      let recommendedKv = null;
+      let messages = [];
+
+      if (serviceType === "liquid") {
+        const sgLiquid = parseFloat(document.getElementById("sgLiquid").value);
+        const flLiquid = parseFloat(document.getElementById("flLiquid").value);
+        const pvLiquid = parseFloat(document.getElementById("pvLiquid").value);
+        const p1Liquid = parseFloat(document.getElementById("p1Liquid").value);
+        const p2Liquid = parseFloat(document.getElementById("p2Liquid").value);
+
+        if (
+          !isFinite(sgLiquid) || sgLiquid <= 0 ||
+          !isFinite(flLiquid) || flLiquid <= 0 ||
+          !isFinite(pvLiquid) || pvLiquid < 0 ||
+          !isFinite(p1Liquid) || p1Liquid <= 0 ||
+          !isFinite(p2Liquid) || p2Liquid < 0 ||
+          p1Liquid <= p2Liquid
+        ) {
+          alert("Please enter valid liquid service values. Upstream pressure must be greater than downstream pressure.");
+          return;
+        }
+
+        const Qm3h = convertFlowToM3h(flowValue, flowUnit);
+        dpBar = p1Liquid - p2Liquid;
+
+        requiredCv = calculateLiquidCv(Qm3h, sgLiquid, dpBar);
+        requiredKv = cvToKv(requiredCv);
+
+        // Simplified choked liquid screening
+        const dpCritical = Math.pow(flLiquid, 2) * Math.max(0, p1Liquid - pvLiquid);
+        choked = dpBar >= dpCritical;
+        chokedText = choked ? "Likely / Near" : "No";
+        ratioText = fmt(dpBar / Math.max(0.0001, p1Liquid - pvLiquid), 3);
+
+        openingPercent = estimateOpeningPercent(requiredCv, installedCv, characteristic);
+        recommendedCv = estimateRecommendedRatedCv(requiredCv, travelTarget, characteristic);
+        recommendedKv = cvToKv(recommendedCv);
+
+        if (isFinite(installedCv) && installedCv > 0) {
+          const ratio = requiredCv / installedCv;
+          utilization = fmt(ratio * 100, 1) + "%";
+
+          if (ratio < 0.25) {
+            sizingStatus = "Likely oversized";
+          } else if (ratio < 0.5) {
+            sizingStatus = "Possibly oversized";
+          } else if (ratio <= 0.85) {
+            sizingStatus = "Reasonable";
+          } else if (ratio <= 1.0) {
+            sizingStatus = "Near full capacity";
+          } else {
+            sizingStatus = "Undersized";
+          }
+        }
+
+        if (choked) {
+          messages.push(`<li><span class="bad">Likely choked liquid flow:</span> The available pressure drop approaches or exceeds the simplified critical pressure-drop limit. This raises concern for flashing, cavitation, noise, and trim damage depending on service details.</li>`);
+        } else {
+          messages.push(`<li><span class="good">No clear choked-flow flag:</span> The current screening result does not indicate liquid choking based on the simplified FL approach.</li>`);
+        }
+      } else {
+        const sgGas = parseFloat(document.getElementById("sgGas").value);
+        const temperatureGas = parseFloat(document.getElementById("temperatureGas").value);
+        const zFactor = parseFloat(document.getElementById("zFactor").value);
+        const xtGas = parseFloat(document.getElementById("xtGas").value);
+        const gammaGas = parseFloat(document.getElementById("gammaGas").value);
+        const p1Gas = parseFloat(document.getElementById("p1Gas").value);
+        const p2Gas = parseFloat(document.getElementById("p2Gas").value);
+        const yOverrideRaw = document.getElementById("yFactor").value;
+
+        if (
+          !isFinite(sgGas) || sgGas <= 0 ||
+          !isFinite(temperatureGas) ||
+          !isFinite(zFactor) || zFactor <= 0 ||
+          !isFinite(xtGas) || xtGas <= 0 ||
+          !isFinite(gammaGas) || gammaGas <= 1 ||
+          !isFinite(p1Gas) || p1Gas <= 0 ||
+          !isFinite(p2Gas) || p2Gas < 0 ||
+          p1Gas <= p2Gas
+        ) {
+          alert("Please enter valid gas service values. Upstream pressure must be greater than downstream pressure.");
+          return;
+        }
+
+        const Qnm3h = convertFlowToM3h(flowValue, flowUnit);
+        dpBar = p1Gas - p2Gas;
+        const x = dpBar / p1Gas;
+        const fk = gammaGas / 1.4;
+        const xCritical = fk * xtGas;
+
+        let yAuto = 1 - (x / (3 * xCritical));
+        yAuto = Math.max(0.67, Math.min(1, yAuto));
+
+        let yUsed = yAuto;
+        if (yOverrideRaw !== "") {
+          const yOverride = parseFloat(yOverrideRaw);
+          if (!isFinite(yOverride) || yOverride <= 0 || yOverride > 1) {
+            alert("Expansion factor Y must be between 0 and 1.");
+            return;
+          }
+          yUsed = yOverride;
+        }
+
+        requiredCv = calculateGasCv(Qnm3h, sgGas, p1Gas, dpBar, temperatureGas, zFactor, yUsed);
+        requiredKv = cvToKv(requiredCv);
+
+        choked = x >= xCritical;
+        chokedText = choked ? "Likely / Near" : "No";
+        ratioText = fmt(x, 3) + " / xTcrit " + fmt(xCritical, 3);
+
+        openingPercent = estimateOpeningPercent(requiredCv, installedCv, characteristic);
+        recommendedCv = estimateRecommendedRatedCv(requiredCv, travelTarget, characteristic);
+        recommendedKv = cvToKv(recommendedCv);
+
+        if (isFinite(installedCv) && installedCv > 0) {
+          const ratio = requiredCv / installedCv;
+          utilization = fmt(ratio * 100, 1) + "%";
+
+          if (ratio < 0.25) {
+            sizingStatus = "Likely oversized";
+          } else if (ratio < 0.5) {
+            sizingStatus = "Possibly oversized";
+          } else if (ratio <= 0.85) {
+            sizingStatus = "Reasonable";
+          } else if (ratio <= 1.0) {
+            sizingStatus = "Near full capacity";
+          } else {
+            sizingStatus = "Undersized";
+          }
+        }
+
+        if (choked) {
+          messages.push(`<li><span class="bad">Likely choked gas flow:</span> The pressure-drop ratio reaches or exceeds the simplified critical limit. Real service may face high noise, trim stress, and reduced controllability.</li>`);
+        } else {
+          messages.push(`<li><span class="good">No clear choked-flow flag:</span> The current screening result does not indicate gas choking based on the simplified Xt approach.</li>`);
+        }
+      }
+
+      if (!isFinite(requiredCv) || requiredCv <= 0) {
+        alert("The calculation did not produce a valid result. Check the input data.");
+        return;
+      }
+
+      if (isFinite(openingPercent)) {
+        if (openingPercent < 20) {
+          messages.push(`<li><span class="bad">Very low estimated opening:</span> The installed valve appears to run near the seat at normal conditions. This is a classic oversizing signal and may cause poor controllability and hunting.</li>`);
+        } else if (openingPercent < 40) {
+          messages.push(`<li><span class="warning">Low estimated opening:</span> The valve may be somewhat oversized for normal operation. Review whether the control objective really needs this installed Cv.</li>`);
+        } else if (openingPercent <= 80) {
+          messages.push(`<li><span class="good">Healthy operating travel:</span> The estimated normal opening lies in a generally favorable control range.</li>`);
+        } else {
+          messages.push(`<li><span class="warning">High estimated opening:</span> The valve appears to operate near its upper travel range. This may reduce control margin under upset or high-load cases.</li>`);
+        }
+      } else {
+        messages.push(`<li><span class="warning">No installed Cv entered:</span> Opening estimate and oversizing check were skipped because no installed valve Cv was provided.</li>`);
+      }
+
+      if (sizingStatus === "Likely oversized" || sizingStatus === "Possibly oversized") {
+        messages.push(`<li><span class="bad">Oversizing risk:</span> An oversized valve often creates poor control resolution, excessive sensitivity near the seat, and loop instability. This is a common hidden source of process variability.</li>`);
+      } else if (sizingStatus === "Undersized" || sizingStatus === "Near full capacity") {
+        messages.push(`<li><span class="warning">Limited valve capacity margin:</span> The installed valve may be near or above its workable range for this case. Future turndown and maximum-load scenarios should be checked carefully.</li>`);
+      } else if (sizingStatus === "Reasonable") {
+        messages.push(`<li><span class="good">Sizing looks broadly reasonable:</span> The installed Cv appears aligned with the calculated demand for this screening case.</li>`);
+      }
+
+      if (requiredCv < 15) {
+        messages.push(`<li><span class="warning">Small required Cv:</span> Small Cv applications can become especially sensitive to trim selection, actuator friction, and valve stiction. The control quality may depend strongly on hardware details.</li>`);
+      } else if (requiredCv > 200) {
+        messages.push(`<li><span class="warning">Large required Cv:</span> This is a relatively large valve duty. It is worth checking whether pressure is being wasted elsewhere in the system or if better pressure allocation is possible.</li>`);
+      }
+
+      if ((isFinite(openingPercent) && openingPercent < 30) || choked) {
+        messages.push(`<li><strong>Engineering insight:</strong> This case suggests a possible control-quality issue. Review valve sizing, pressure-drop allocation, loop tuning, and whether the valve is burning too much pressure for the real operating target.</li>`);
+      } else {
+        messages.push(`<li><strong>Engineering insight:</strong> This looks workable as a first-pass case, but final design should still confirm valve style, trim, cavitation/noise limits, actuator sizing, and real operating envelope.</li>`);
+      }
+
+      document.getElementById("cvResult").textContent = fmt(requiredCv, 2);
+      document.getElementById("kvResult").textContent = fmt(requiredKv, 2);
+      document.getElementById("dpResult").textContent = fmt(dpBar, 3) + " bar";
+      document.getElementById("chokedResult").textContent = chokedText;
+      document.getElementById("openingResult").textContent = isFinite(openingPercent) ? fmt(openingPercent, 1) + "%" : "N/A";
+      document.getElementById("sizingStatusResult").textContent = sizingStatus;
+      document.getElementById("ratioResult").textContent = ratioText;
+      document.getElementById("utilizationResult").textContent = utilization;
+      document.getElementById("recommendedCvResult").textContent = fmt(recommendedCv, 1);
+      document.getElementById("recommendedKvResult").textContent = fmt(recommendedKv, 1);
+
+      document.getElementById("interpretationList").innerHTML = messages.join("");
+      drawValveChart(requiredCv, installedCv, openingPercent, characteristic);
+    }
+
+    function resetValveCalculator() {
+      document.getElementById("serviceType").value = "liquid";
+      document.getElementById("characteristic").value = "equal";
+      document.getElementById("flowValue").value = 100;
+      document.getElementById("flowUnit").value = "m3h";
+      document.getElementById("sgLiquid").value = 1.0;
+      document.getElementById("flLiquid").value = 0.9;
+      document.getElementById("pvLiquid").value = 0.03;
+      document.getElementById("p1Liquid").value = 6;
+      document.getElementById("p2Liquid").value = 5;
+
+      document.getElementById("sgGas").value = 0.6;
+      document.getElementById("temperatureGas").value = 25;
+      document.getElementById("zFactor").value = 1;
+      document.getElementById("xtGas").value = 0.7;
+      document.getElementById("gammaGas").value = 1.3;
+      document.getElementById("p1Gas").value = 6;
+      document.getElementById("p2Gas").value = 4.5;
+      document.getElementById("yFactor").value = "";
+
+      document.getElementById("installedCv").value = 120;
+      document.getElementById("travelTarget").value = 70;
+      document.getElementById("notes").value = "";
+
+      const outputIds = [
+        "cvResult",
+        "kvResult",
+        "dpResult",
+        "chokedResult",
+        "openingResult",
+        "sizingStatusResult",
+        "ratioResult",
+        "utilizationResult",
+        "recommendedCvResult",
+        "recommendedKvResult"
+      ];
+
+      outputIds.forEach(id => {
+        document.getElementById(id).textContent = "-";
+      });
+
+      document.getElementById("interpretationList").innerHTML =
+        "<li>Enter your data and click <strong>Calculate</strong>.</li>";
+
+      const canvas = document.getElementById("valveCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      toggleServiceFields();
+      calculateValve();
+    }
+
+    toggleServiceFields();
+    calculateValve();
+  </script>
+</body>
+</html>
