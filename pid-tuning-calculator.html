@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic SEO -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PID Tuning Calculator | Alatau Tech Consulting</title>
+  <meta name="description" content="Estimate PID tuning parameters using Ziegler–Nichols and Cohen–Coon methods, simulate step response, and screen loop stability risk for industrial control loops.">
+  <meta name="keywords" content="PID tuning calculator, Ziegler Nichols, Cohen Coon, step response, process control, controller tuning, loop performance">
+  <meta name="author" content="Alatau Tech Consulting">
+  <link rel="canonical" href="https://alatau.tech/pid-tuning-calculator.html">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .language-bar {
+      background: #f1f1f1;
+      text-align: right;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .language-bar a {
+      text-decoration: none;
+      margin: 0 0.5rem;
+      color: #003366;
+      font-weight: 600;
+    }
+
+    nav {
+      background: #003366;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-weight: 600;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: #003366;
+      color: #fff;
+      min-height: 40vh;
+    }
+
+    .hero-text {
+      flex: 1 1 600px;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    .hero-text h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero-text p {
+      font-size: 1.05rem;
+      margin: 0 auto;
+      max-width: 760px;
+    }
+
+    section {
+      padding: 3rem 1.25rem;
+      max-width: 1150px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 1.5rem;
+    }
+
+    .calc-layout {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #003366;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 1rem 1.2rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field label {
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: #003366;
+      font-size: 0.95rem;
+    }
+
+    .field input,
+    .field select {
+      padding: 0.75rem;
+      border: 1px solid #cfd6de;
+      border-radius: 8px;
+      font-size: 0.96rem;
+      background: #fff;
+    }
+
+    .field small {
+      margin-top: 0.3rem;
+      color: #666;
+      font-size: 0.82rem;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    button {
+      padding: 0.9rem 1.25rem;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .result-box {
+      background: #f8fbff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .result-box .label {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0.35rem;
+    }
+
+    .result-box .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #003366;
+    }
+
+    .message-list {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .message-list li {
+      margin-bottom: 0.7rem;
+    }
+
+    .warning {
+      color: #a15c00;
+      font-weight: 600;
+    }
+
+    .good {
+      color: #0b6b2f;
+      font-weight: 600;
+    }
+
+    .bad {
+      color: #a00000;
+      font-weight: 600;
+    }
+
+    .note {
+      background: #eef5fb;
+      border-left: 4px solid #003366;
+      padding: 1rem 1rem 1rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .chart-wrap {
+      margin-top: 1.25rem;
+    }
+
+    .chart-box {
+      background: #fff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      display: block;
+      background: #fff;
+      border-radius: 8px;
+    }
+
+    .method-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.93rem;
+    }
+
+    .method-table th,
+    .method-table td {
+      border: 1px solid #d6e4f2;
+      padding: 0.7rem;
+      text-align: center;
+    }
+
+    .method-table th {
+      background: #f3f8fd;
+      color: #003366;
+    }
+
+    footer {
+      background: #003366;
+      color: #fff;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 900px) {
+      .calc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid,
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        justify-content: center;
+      }
+
+      .hero-text h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "PID Tuning Calculator",
+    "url": "https://alatau.tech/pid-tuning-calculator.html",
+    "description": "Estimate PID parameters using Ziegler–Nichols and Cohen–Coon, simulate step response, and screen loop stability risk.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Alatau Tech Consulting",
+      "url": "https://alatau.tech"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <div class="language-bar">
+    <a href="index-kz.html" onclick="document.cookie='langPref=kk; path=/';">
+      <img src="flags/kz.png" alt="KZ" style="height:16px; vertical-align:middle;"> KZ
+    </a> |
+    <a href="index.html" onclick="document.cookie='langPref=en; path=/';">
+      <img src="flags/gb.png" alt="EN" style="height:16px; vertical-align:middle;"> EN
+    </a> |
+    <a href="index-ru.html" onclick="document.cookie='langPref=ru; path=/';">
+      <img src="flags/ru.png" alt="RU" style="height:16px; vertical-align:middle;"> RU
+    </a>
+  </div>
+
+  <nav>
+    <div><a href="index.html">Alatau Tech Consulting</a></div>
+    <div>
+      <a href="index.html#about">About</a>
+      <a href="index.html#services">Services</a>
+      <a href="index.html#industries">Industries</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </nav>
+
+  <header>
+    <div class="hero-text">
+      <h1>PID Tuning Calculator</h1>
+      <p>
+        Estimate controller settings using Ziegler–Nichols and Cohen–Coon methods,
+        visualize a simulated step response, and screen for oscillation or sluggishness risk
+        in industrial loops.
+      </p>
+    </div>
+  </header>
+
+  <section>
+    <div class="note">
+      <strong>Scope of this version:</strong> first-order-plus-dead-time style screening tool for
+      practical loop assessment. This is intended for fast engineering checks, not a replacement for
+      plant testing, APC studies, safety validation, or vendor-specific controller implementation details.
+    </div>
+  </section>
+
+  <section>
+    <h2>Calculator</h2>
+
+    <div class="calc-layout">
+      <div class="card">
+        <h3>Input Data</h3>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="tuningMethod">Preferred Tuning Method</label>
+            <select id="tuningMethod">
+              <option value="zn-reaction" selected>Ziegler–Nichols (Reaction Curve)</option>
+              <option value="cohen-coon">Cohen–Coon</option>
+              <option value="zn-ultimate">Ziegler–Nichols (Ultimate Gain)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="controllerType">Controller Type</label>
+            <select id="controllerType">
+              <option value="pid" selected>PID</option>
+              <option value="pi">PI</option>
+              <option value="p">P</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="processGain">Process Gain Kp</label>
+            <input type="number" id="processGain" value="1.2" step="any">
+            <small>Process variable change / controller output change</small>
+          </div>
+
+          <div class="field">
+            <label for="timeConstant">Process Time Constant τ (s)</label>
+            <input type="number" id="timeConstant" value="45" step="any">
+          </div>
+
+          <div class="field">
+            <label for="deadTime">Dead Time L (s)</label>
+            <input type="number" id="deadTime" value="10" step="any">
+          </div>
+
+          <div class="field">
+            <label for="setpointStep">Setpoint Step Size</label>
+            <input type="number" id="setpointStep" value="1" step="any">
+          </div>
+
+          <div class="field">
+            <label for="simTime">Simulation Time (s)</label>
+            <input type="number" id="simTime" value="240" step="any">
+          </div>
+
+          <div class="field">
+            <label for="aggressiveness">Aggressiveness Factor</label>
+            <input type="number" id="aggressiveness" value="1" step="any">
+            <small>1.0 = base tuning, 0.8 = softer, 1.2 = stronger</small>
+          </div>
+
+          <div class="field">
+            <label for="ultimateGain">Ultimate Gain Ku (only for ultimate method)</label>
+            <input type="number" id="ultimateGain" value="4.5" step="any">
+          </div>
+
+          <div class="field">
+            <label for="ultimatePeriod">Ultimate Period Pu (s)</label>
+            <input type="number" id="ultimatePeriod" value="32" step="any">
+          </div>
+
+          <div class="field">
+            <label for="existingKc">Existing Controller Gain Kc (optional)</label>
+            <input type="number" id="existingKc" value="1.5" step="any">
+          </div>
+
+          <div class="field">
+            <label for="existingTi">Existing Integral Time Ti (s, optional)</label>
+            <input type="number" id="existingTi" value="35" step="any">
+          </div>
+
+          <div class="field">
+            <label for="existingTd">Existing Derivative Time Td (s, optional)</label>
+            <input type="number" id="existingTd" value="6" step="any">
+          </div>
+
+          <div class="field">
+            <label for="sampleTime">Simulation Time Step Δt (s)</label>
+            <input type="number" id="sampleTime" value="0.5" step="any">
+          </div>
+
+          <div class="field full-width">
+            <label for="loopNotes">Optional Loop Notes</label>
+            <input type="text" id="loopNotes" placeholder="Example: FC-101, temperature loop, reflux flow, etc.">
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" onclick="calculatePID()">Calculate</button>
+          <button type="button" class="btn-secondary" onclick="resetPIDCalculator()">Reset</button>
+        </div>
+
+        <table class="method-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Kc</th>
+              <th>Ti (s)</th>
+              <th>Td (s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ziegler–Nichols (Reaction)</td>
+              <td id="znReactionKc">-</td>
+              <td id="znReactionTi">-</td>
+              <td id="znReactionTd">-</td>
+            </tr>
+            <tr>
+              <td>Cohen–Coon</td>
+              <td id="ccKc">-</td>
+              <td id="ccTi">-</td>
+              <td id="ccTd">-</td>
+            </tr>
+            <tr>
+              <td>Ziegler–Nichols (Ultimate)</td>
+              <td id="znUltimateKc">-</td>
+              <td id="znUltimateTi">-</td>
+              <td id="znUltimateTd">-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Selected Result</h3>
+
+        <div class="results-grid">
+          <div class="result-box">
+            <div class="label">Recommended Kc</div>
+            <div class="value" id="kcResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Recommended Ti</div>
+            <div class="value" id="tiResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Recommended Td</div>
+            <div class="value" id="tdResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Predicted Overshoot</div>
+            <div class="value" id="overshootResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Settling Time</div>
+            <div class="value" id="settlingTimeResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Rise Time</div>
+            <div class="value" id="riseTimeResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Stability Indicator</div>
+            <div class="value" id="stabilityResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Relative Tuning Severity</div>
+            <div class="value" id="severityResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Existing vs Recommended Kc</div>
+            <div class="value" id="gainCompareResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Existing vs Recommended Ti</div>
+            <div class="value" id="tiCompareResult">-</div>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <h3 style="margin-top:1.5rem;">Step Response Simulation</h3>
+          <div class="chart-box">
+            <canvas id="pidCanvas" width="540" height="340"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Engineering Interpretation</h2>
+    <div class="card">
+      <ul class="message-list" id="interpretationList">
+        <li>Enter your data and click <strong>Calculate</strong>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h3>Need a deeper review?</h3>
+      <p>
+        If the loop looks oscillatory, overly aggressive, or much slower than required, the real issue may
+        be deeper than tuning alone: valve stiction, sensor delay, dead time, bad pressure-drop allocation,
+        or a process constraint problem.
+      </p>
+      <p>
+        Alatau Tech Consulting supports loop performance review, control strategy improvement,
+        oscillation diagnosis, and practical plant optimization studies.
+      </p>
+      <p style="margin-bottom:0;">
+        <a href="index.html#contact" style="color:#003366; font-weight:700; text-decoration:none;">Go to Contact Page</a>
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div style="font-size: 0.95rem;">
+      &copy; 2025 Alatau Tech Consulting. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    function fmt(value, decimals = 2) {
+      if (!isFinite(value)) return "-";
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function znReactionTuning(controllerType, Kp, tau, L) {
+      let Kc = 0, Ti = null, Td = null;
+
+      if (controllerType === "p") {
+        Kc = tau / (Kp * L);
+      } else if (controllerType === "pi") {
+        Kc = 0.9 * tau / (Kp * L);
+        Ti = 3.33 * L;
+      } else {
+        Kc = 1.2 * tau / (Kp * L);
+        Ti = 2 * L;
+        Td = 0.5 * L;
+      }
+
+      return { Kc, Ti, Td };
+    }
+
+    function cohenCoonTuning(controllerType, Kp, tau, L) {
+      const R = L / tau;
+      let Kc = 0, Ti = null, Td = null;
+
+      if (controllerType === "p") {
+        Kc = (1 / Kp) * (tau / L) * (1 + R / 3);
+      } else if (controllerType === "pi") {
+        Kc = (1 / Kp) * (tau / L) * (0.9 + R / 12);
+        Ti = L * ((30 + 3 * R) / (9 + 20 * R));
+      } else {
+        Kc = (1 / Kp) * (tau / L) * ((4 / 3) + (R / 4));
+        Ti = L * ((32 + 6 * R) / (13 + 8 * R));
+        Td = L * (4 / (11 + 2 * R));
+      }
+
+      return { Kc, Ti, Td };
+    }
+
+    function znUltimateTuning(controllerType, Ku, Pu) {
+      let Kc = 0, Ti = null, Td = null;
+
+      if (controllerType === "p") {
+        Kc = 0.5 * Ku;
+      } else if (controllerType === "pi") {
+        Kc = 0.45 * Ku;
+        Ti = Pu / 1.2;
+      } else {
+        Kc = 0.6 * Ku;
+        Ti = Pu / 2;
+        Td = Pu / 8;
+      }
+
+      return { Kc, Ti, Td };
+    }
+
+    function applyAggressiveness(tuning, factor, controllerType) {
+      return {
+        Kc: tuning.Kc * factor,
+        Ti: controllerType === "p" || tuning.Ti == null ? tuning.Ti : tuning.Ti / factor,
+        Td: controllerType !== "pid" || tuning.Td == null ? tuning.Td : tuning.Td * factor
+      };
+    }
+
+    function simulateClosedLoopFOPDT(Kp, tau, L, Kc, Ti, Td, controllerType, stepSize, simTime, dt) {
+      const n = Math.max(2, Math.floor(simTime / dt) + 1);
+      const deadSteps = Math.max(0, Math.round(L / dt));
+
+      const t = [];
+      const y = [];
+      const sp = [];
+      const u = [];
+      const eHist = [];
+
+      let pv = 0;
+      let integ = 0;
+      let prevErr = 0;
+      let delayedU = Array(deadSteps + 1).fill(0);
+
+      for (let i = 0; i < n; i++) {
+        const time = i * dt;
+        const setpoint = stepSize;
+        const err = setpoint - pv;
+
+        let derivative = 0;
+        if (i > 0) derivative = (err - prevErr) / dt;
+
+        let ctrl = Kc * err;
+
+        if (controllerType === "pi" || controllerType === "pid") {
+          if (Ti && Ti > 0) {
+            integ += (err * dt) / Ti;
+            ctrl += Kc * integ;
+          }
+        }
+
+        if (controllerType === "pid") {
+          if (Td && Td > 0) {
+            ctrl += Kc * Td * derivative;
+          }
+        }
+
+        ctrl = clamp(ctrl, -100, 100);
+
+        delayedU.push(ctrl);
+        const effectiveU = delayedU.shift();
+
+        // FOPDT process approximation:
+        // dy/dt = (-y + Kp*u_delayed) / tau
+        const dydt = (-pv + Kp * effectiveU) / tau;
+        pv = pv + dydt * dt;
+
+        t.push(time);
+        y.push(pv);
+        sp.push(setpoint);
+        u.push(ctrl);
+        eHist.push(err);
+
+        prevErr = err;
+      }
+
+      return { t, y, sp, u, eHist };
+    }
+
+    function analyzeResponse(t, y, stepSize) {
+      const finalValue = y[y.length - 1];
+      const target = stepSize;
+      const safeTarget = Math.abs(target) < 1e-9 ? 1 : target;
+
+      let maxY = -Infinity;
+      let riseTime = null;
+      let settlingTime = null;
+
+      for (let i = 0; i < y.length; i++) {
+        maxY = Math.max(maxY, y[i]);
+
+        if (riseTime === null && y[i] >= 0.9 * target) {
+          riseTime = t[i];
+        }
+      }
+
+      const band = 0.02 * Math.abs(safeTarget);
+      for (let i = 0; i < y.length; i++) {
+        let settled = true;
+        for (let j = i; j < y.length; j++) {
+          if (Math.abs(y[j] - target) > band) {
+            settled = false;
+            break;
+          }
+        }
+        if (settled) {
+          settlingTime = t[i];
+          break;
+        }
+      }
+
+      let overshoot = ((maxY - target) / Math.abs(safeTarget)) * 100;
+      overshoot = Math.max(0, overshoot);
+
+      return {
+        finalValue,
+        maxY,
+        overshoot,
+        riseTime,
+        settlingTime
+      };
+    }
+
+    function drawPIDChart(sim) {
+      const canvas = document.getElementById("pidCanvas");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const margin = { top: 25, right: 25, bottom: 45, left: 55 };
+      const plotW = w - margin.left - margin.right;
+      const plotH = h - margin.top - margin.bottom;
+
+      const tMax = sim.t[sim.t.length - 1] || 1;
+      const yMin = Math.min(...sim.y, ...sim.sp) - 0.2 * Math.max(1, Math.abs(sim.sp[0]));
+      const yMax = Math.max(...sim.y, ...sim.sp) + 0.2 * Math.max(1, Math.abs(sim.sp[0]));
+      const safeSpan = Math.max(1, yMax - yMin);
+
+      function xScale(x) {
+        return margin.left + (x / tMax) * plotW;
+      }
+
+      function yScale(val) {
+        return margin.top + plotH - ((val - yMin) / safeSpan) * plotH;
+      }
+
+      // axes
+      ctx.strokeStyle = "#003366";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, margin.top);
+      ctx.lineTo(margin.left, margin.top + plotH);
+      ctx.lineTo(margin.left + plotW, margin.top + plotH);
+      ctx.stroke();
+
+      // setpoint
+      ctx.strokeStyle = "#0b6b2f";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      for (let i = 0; i < sim.t.length; i++) {
+        const x = xScale(sim.t[i]);
+        const y = yScale(sim.sp[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // response
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "#003366";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let i = 0; i < sim.t.length; i++) {
+        const x = xScale(sim.t[i]);
+        const y = yScale(sim.y[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // labels
+      ctx.fillStyle = "#333";
+      ctx.font = "12px Poppins";
+      ctx.fillText("Time (s)", margin.left + plotW / 2 - 20, h - 12);
+
+      ctx.save();
+      ctx.translate(15, margin.top + plotH / 2 + 20);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("PV / SP", 0, 0);
+      ctx.restore();
+
+      ctx.fillStyle = "#003366";
+      ctx.fillText("Process response", margin.left + 8, margin.top + 14);
+
+      ctx.fillStyle = "#0b6b2f";
+      ctx.fillText("Setpoint", margin.left + 130, margin.top + 14);
+
+      // ticks
+      ctx.fillStyle = "#555";
+      ctx.font = "11px Poppins";
+      for (let i = 0; i <= 5; i++) {
+        const tx = (tMax * i) / 5;
+        const x = xScale(tx);
+        ctx.beginPath();
+        ctx.moveTo(x, margin.top + plotH);
+        ctx.lineTo(x, margin.top + plotH + 5);
+        ctx.strokeStyle = "#003366";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillText(fmt(tx, 0), x - 8, margin.top + plotH + 18);
+      }
+    }
+
+    function calculatePID() {
+      const tuningMethod = document.getElementById("tuningMethod").value;
+      const controllerType = document.getElementById("controllerType").value;
+      const Kp = parseFloat(document.getElementById("processGain").value);
+      const tau = parseFloat(document.getElementById("timeConstant").value);
+      const L = parseFloat(document.getElementById("deadTime").value);
+      const stepSize = parseFloat(document.getElementById("setpointStep").value);
+      const simTime = parseFloat(document.getElementById("simTime").value);
+      const aggressiveness = parseFloat(document.getElementById("aggressiveness").value);
+      const Ku = parseFloat(document.getElementById("ultimateGain").value);
+      const Pu = parseFloat(document.getElementById("ultimatePeriod").value);
+      const existingKc = parseFloat(document.getElementById("existingKc").value);
+      const existingTi = parseFloat(document.getElementById("existingTi").value);
+      const existingTd = parseFloat(document.getElementById("existingTd").value);
+      const dt = parseFloat(document.getElementById("sampleTime").value);
+
+      if (
+        !isFinite(Kp) || Kp === 0 ||
+        !isFinite(tau) || tau <= 0 ||
+        !isFinite(L) || L < 0 ||
+        !isFinite(stepSize) || stepSize === 0 ||
+        !isFinite(simTime) || simTime <= 0 ||
+        !isFinite(aggressiveness) || aggressiveness <= 0 ||
+        !isFinite(dt) || dt <= 0
+      ) {
+        alert("Please enter valid process and simulation values.");
+        return;
+      }
+
+      if (tuningMethod === "zn-ultimate") {
+        if (!isFinite(Ku) || Ku <= 0 || !isFinite(Pu) || Pu <= 0) {
+          alert("For Ziegler–Nichols ultimate tuning, please enter valid Ku and Pu.");
+          return;
+        }
+      }
+
+      // All methods for comparison
+      const znReactionBase = znReactionTuning(controllerType, Kp, tau, Math.max(L, 0.001));
+      const ccBase = cohenCoonTuning(controllerType, Kp, tau, Math.max(L, 0.001));
+      const znUltimateBase = znUltimateTuning(controllerType, Math.max(Ku || 1, 0.001), Math.max(Pu || 1, 0.001));
+
+      const znReaction = applyAggressiveness(znReactionBase, aggressiveness, controllerType);
+      const cc = applyAggressiveness(ccBase, aggressiveness, controllerType);
+      const znUltimate = applyAggressiveness(znUltimateBase, aggressiveness, controllerType);
+
+      let selected;
+      if (tuningMethod === "cohen-coon") {
+        selected = cc;
+      } else if (tuningMethod === "zn-ultimate") {
+        selected = znUltimate;
+      } else {
+        selected = znReaction;
+      }
+
+      const sim = simulateClosedLoopFOPDT(
+        Kp,
+        tau,
+        L,
+        selected.Kc,
+        selected.Ti,
+        selected.Td,
+        controllerType,
+        stepSize,
+        simTime,
+        dt
+      );
+
+      const analysis = analyzeResponse(sim.t, sim.y, stepSize);
+
+      let stability = "Stable";
+      if (analysis.overshoot > 35) {
+        stability = "Oscillatory risk";
+      } else if (analysis.overshoot > 15) {
+        stability = "Moderately aggressive";
+      } else if (!analysis.settlingTime || analysis.settlingTime > 0.8 * simTime) {
+        stability = "Sluggish";
+      }
+
+      const severityIndex = (selected.Kc * Math.max(L, 0.001)) / Math.max(Math.abs(Kp) * tau, 0.001);
+      let severity = "Moderate";
+      if (severityIndex < 0.1) severity = "Soft";
+      else if (severityIndex > 0.35) severity = "Strong";
+
+      document.getElementById("znReactionKc").textContent = fmt(znReaction.Kc, 3);
+      document.getElementById("znReactionTi").textContent = znReaction.Ti == null ? "-" : fmt(znReaction.Ti, 2);
+      document.getElementById("znReactionTd").textContent = znReaction.Td == null ? "-" : fmt(znReaction.Td, 2);
+
+      document.getElementById("ccKc").textContent = fmt(cc.Kc, 3);
+      document.getElementById("ccTi").textContent = cc.Ti == null ? "-" : fmt(cc.Ti, 2);
+      document.getElementById("ccTd").textContent = cc.Td == null ? "-" : fmt(cc.Td, 2);
+
+      document.getElementById("znUltimateKc").textContent = fmt(znUltimate.Kc, 3);
+      document.getElementById("znUltimateTi").textContent = znUltimate.Ti == null ? "-" : fmt(znUltimate.Ti, 2);
+      document.getElementById("znUltimateTd").textContent = znUltimate.Td == null ? "-" : fmt(znUltimate.Td, 2);
+
+      document.getElementById("kcResult").textContent = fmt(selected.Kc, 3);
+      document.getElementById("tiResult").textContent = selected.Ti == null ? "-" : fmt(selected.Ti, 2) + " s";
+      document.getElementById("tdResult").textContent = selected.Td == null ? "-" : fmt(selected.Td, 2) + " s";
+      document.getElementById("overshootResult").textContent = fmt(analysis.overshoot, 1) + "%";
+      document.getElementById("settlingTimeResult").textContent = analysis.settlingTime == null ? "Not settled" : fmt(analysis.settlingTime, 1) + " s";
+      document.getElementById("riseTimeResult").textContent = analysis.riseTime == null ? "N/A" : fmt(analysis.riseTime, 1) + " s";
+      document.getElementById("stabilityResult").textContent = stability;
+      document.getElementById("severityResult").textContent = severity;
+
+      document.getElementById("gainCompareResult").textContent =
+        isFinite(existingKc) && existingKc > 0
+          ? fmt((existingKc / selected.Kc) * 100, 0) + "% of recommended"
+          : "N/A";
+
+      document.getElementById("tiCompareResult").textContent =
+        isFinite(existingTi) && existingTi > 0 && selected.Ti
+          ? fmt((existingTi / selected.Ti) * 100, 0) + "% of recommended"
+          : "N/A";
+
+      const messages = [];
+
+      if (L / tau > 0.5) {
+        messages.push(`<li><span class="bad">Dead-time-dominant process:</span> The dead time is large relative to the time constant. This usually makes the loop harder to tune and more sensitive to aggressive settings.</li>`);
+      } else if (L / tau > 0.2) {
+        messages.push(`<li><span class="warning">Meaningful dead time:</span> The process has a noticeable delay. Conservative tuning is often safer than highly aggressive tuning in this range.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Delay ratio looks manageable:</span> Dead time is not extreme relative to the process time constant in this screening case.</li>`);
+      }
+
+      if (analysis.overshoot > 35) {
+        messages.push(`<li><span class="bad">High overshoot predicted:</span> The simulated response overshoots by about <strong>${fmt(analysis.overshoot, 1)}%</strong>. This suggests a real risk of oscillation, interaction, or poor operator acceptance.</li>`);
+      } else if (analysis.overshoot > 15) {
+        messages.push(`<li><span class="warning">Moderate overshoot predicted:</span> The tuning appears fairly aggressive. This may be acceptable for some fast flow loops, but it is often too strong for pressure, temperature, or composition loops.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Controlled overshoot:</span> The simulated response does not show excessive overshoot for this screening case.</li>`);
+      }
+
+      if (analysis.settlingTime == null || analysis.settlingTime > 0.8 * simTime) {
+        messages.push(`<li><span class="warning">Slow settling:</span> The loop does not settle quickly within the selected simulation window. The tuning may be too soft, or the process may simply be slow and delay-limited.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Reasonable settling behavior:</span> The simulated response settles within the selected window.</li>`);
+      }
+
+      if (isFinite(existingKc) && existingKc > 0) {
+        const kcRatio = existingKc / selected.Kc;
+        if (kcRatio > 1.4) {
+          messages.push(`<li><span class="bad">Existing gain looks high:</span> Your existing controller gain is substantially above the selected recommendation. This can be a direct cause of oscillation or output hunting.</li>`);
+        } else if (kcRatio < 0.6) {
+          messages.push(`<li><span class="warning">Existing gain looks low:</span> Your current controller may be tuned more softly than the selected recommendation. This often leads to sluggish recovery and poor disturbance rejection.</li>`);
+        } else {
+          messages.push(`<li><span class="good">Existing gain is in the same range:</span> The current gain does not look radically different from the selected recommendation.</li>`);
+        }
+      } else {
+        messages.push(`<li><span class="warning">No existing gain entered:</span> Comparison against current tuning was skipped.</li>`);
+      }
+
+      if (severity === "Strong") {
+        messages.push(`<li><span class="warning">Strong tuning severity:</span> The selected settings are on the aggressive side for the process dynamics entered. This may work for some clean fast loops, but can become fragile with valve stiction, sensor lag, or operating changes.</li>`);
+      } else if (severity === "Soft") {
+        messages.push(`<li><span class="warning">Soft tuning severity:</span> The selected settings are relatively conservative. This can be safer, but may also leave performance on the table.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Moderate tuning severity:</span> The selected settings sit in a middle range for this process model.</li>`);
+      }
+
+      if (stability === "Oscillatory risk" || L / tau > 0.5 || analysis.overshoot > 25) {
+        messages.push(`<li><strong>Engineering insight:</strong> This loop may not be fixable by tuning alone. Check valve stiction, measurement filtering, dead time sources, and whether the process itself has too much delay for the chosen control objective.</li>`);
+      } else {
+        messages.push(`<li><strong>Engineering insight:</strong> This looks like a workable first-pass tuning set. Final settings should still be validated against real plant behavior, controller form, output limits, anti-reset windup, and upset conditions.</li>`);
+      }
+
+      document.getElementById("interpretationList").innerHTML = messages.join("");
+      drawPIDChart(sim);
+    }
+
+    function resetPIDCalculator() {
+      document.getElementById("tuningMethod").value = "zn-reaction";
+      document.getElementById("controllerType").value = "pid";
+      document.getElementById("processGain").value = "1.2";
+      document.getElementById("timeConstant").value = "45";
+      document.getElementById("deadTime").value = "10";
+      document.getElementById("setpointStep").value = "1";
+      document.getElementById("simTime").value = "240";
+      document.getElementById("aggressiveness").value = "1";
+      document.getElementById("ultimateGain").value = "4.5";
+      document.getElementById("ultimatePeriod").value = "32";
+      document.getElementById("existingKc").value = "1.5";
+      document.getElementById("existingTi").value = "35";
+      document.getElementById("existingTd").value = "6";
+      document.getElementById("sampleTime").value = "0.5";
+      document.getElementById("loopNotes").value = "";
+
+      const outputIds = [
+        "znReactionKc", "znReactionTi", "znReactionTd",
+        "ccKc", "ccTi", "ccTd",
+        "znUltimateKc", "znUltimateTi", "znUltimateTd",
+        "kcResult", "tiResult", "tdResult",
+        "overshootResult", "settlingTimeResult", "riseTimeResult",
+        "stabilityResult", "severityResult",
+        "gainCompareResult", "tiCompareResult"
+      ];
+
+      outputIds.forEach(id => {
+        document.getElementById(id).textContent = "-";
+      });
+
+      document.getElementById("interpretationList").innerHTML =
+        "<li>Enter your data and click <strong>Calculate</strong>.</li>";
+
+      const canvas = document.getElementById("pidCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      calculatePID();
+    }
+
+    calculatePID();
+  </script>
+</body>
+</html>
