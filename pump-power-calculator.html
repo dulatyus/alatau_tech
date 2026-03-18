@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic SEO -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pump Power & Efficiency Calculator | Alatau Tech Consulting</title>
+  <meta name="description" content="Estimate pump hydraulic power, required shaft power, annual energy cost, and operating point quality relative to BEP for industrial liquid systems.">
+  <meta name="keywords" content="pump power calculator, pump efficiency calculator, BEP, pump operating point, centrifugal pump, process engineering, oil and gas calculator">
+  <meta name="author" content="Alatau Tech Consulting">
+  <link rel="canonical" href="https://alatau.tech/pump-power-calculator.html">
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .language-bar {
+      background: #f1f1f1;
+      text-align: right;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .language-bar a {
+      text-decoration: none;
+      margin: 0 0.5rem;
+      color: #003366;
+      font-weight: 600;
+    }
+
+    nav {
+      background: #003366;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-weight: 600;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 2rem;
+      background: #003366;
+      color: #fff;
+      min-height: 40vh;
+    }
+
+    .hero-text {
+      flex: 1 1 600px;
+      max-width: 850px;
+      text-align: center;
+    }
+
+    .hero-text h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero-text p {
+      font-size: 1.05rem;
+      margin: 0 auto;
+      max-width: 760px;
+    }
+
+    section {
+      padding: 3rem 1.25rem;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 1.5rem;
+    }
+
+    .calc-layout {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #003366;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 1rem 1.2rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field label {
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: #003366;
+      font-size: 0.95rem;
+    }
+
+    .field input,
+    .field select {
+      padding: 0.75rem;
+      border: 1px solid #cfd6de;
+      border-radius: 8px;
+      font-size: 0.96rem;
+      background: #fff;
+    }
+
+    .field small {
+      margin-top: 0.3rem;
+      color: #666;
+      font-size: 0.82rem;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    button {
+      padding: 0.9rem 1.25rem;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .result-box {
+      background: #f8fbff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .result-box .label {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0.35rem;
+    }
+
+    .result-box .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #003366;
+    }
+
+    .message-list {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .message-list li {
+      margin-bottom: 0.7rem;
+    }
+
+    .warning {
+      color: #a15c00;
+      font-weight: 600;
+    }
+
+    .good {
+      color: #0b6b2f;
+      font-weight: 600;
+    }
+
+    .bad {
+      color: #a00000;
+      font-weight: 600;
+    }
+
+    .note {
+      background: #eef5fb;
+      border-left: 4px solid #003366;
+      padding: 1rem 1rem 1rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .curve-wrap {
+      margin-top: 1.25rem;
+    }
+
+    .curve-box {
+      background: #fff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      display: block;
+      background: #fff;
+      border-radius: 8px;
+    }
+
+    footer {
+      background: #003366;
+      color: #fff;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 900px) {
+      .calc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid,
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        justify-content: center;
+      }
+
+      .hero-text h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Pump Power & Efficiency Calculator",
+    "url": "https://alatau.tech/pump-power-calculator.html",
+    "description": "Estimate pump hydraulic power, required shaft power, annual energy cost, and BEP-related operating quality.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Alatau Tech Consulting",
+      "url": "https://alatau.tech"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <div class="language-bar">
+    <a href="index-kz.html" onclick="document.cookie='langPref=kk; path=/';">
+      <img src="flags/kz.png" alt="KZ" style="height:16px; vertical-align:middle;"> KZ
+    </a> |
+    <a href="index.html" onclick="document.cookie='langPref=en; path=/';">
+      <img src="flags/gb.png" alt="EN" style="height:16px; vertical-align:middle;"> EN
+    </a> |
+    <a href="index-ru.html" onclick="document.cookie='langPref=ru; path=/';">
+      <img src="flags/ru.png" alt="RU" style="height:16px; vertical-align:middle;"> RU
+    </a>
+  </div>
+
+  <nav>
+    <div><a href="index.html">Alatau Tech Consulting</a></div>
+    <div>
+      <a href="index.html#about">About</a>
+      <a href="index.html#services">Services</a>
+      <a href="index.html#industries">Industries</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </nav>
+
+  <header>
+    <div class="hero-text">
+      <h1>Pump Power & Efficiency Calculator</h1>
+      <p>
+        Estimate hydraulic power, required pump power, annual electricity cost, and whether the
+        operating point appears close to the pump’s Best Efficiency Point (BEP).
+      </p>
+    </div>
+  </header>
+
+  <section>
+    <div class="note">
+      <strong>Scope of this version:</strong> liquid service only, using a practical engineering model.
+      This is a screening tool for energy, operating point quality, and BEP distance. It does not replace
+      vendor pump curves, NPSH checks, or a detailed hydraulic study.
+    </div>
+  </section>
+
+  <section>
+    <h2>Calculator</h2>
+
+    <div class="calc-layout">
+      <div class="card">
+        <h3>Input Data</h3>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="density">Fluid Density (kg/m³)</label>
+            <input type="number" id="density" value="1000" step="any">
+            <small>Example: water ≈ 1000</small>
+          </div>
+
+          <div class="field">
+            <label for="flowRate">Operating Flow Rate</label>
+            <input type="number" id="flowRate" value="120" step="any">
+          </div>
+
+          <div class="field">
+            <label for="flowUnit">Flow Unit</label>
+            <select id="flowUnit">
+              <option value="m3h" selected>m³/h</option>
+              <option value="m3s">m³/s</option>
+              <option value="lps">L/s</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="head">Differential Head (m)</label>
+            <input type="number" id="head" value="45" step="any">
+            <small>Total dynamic head at operating point</small>
+          </div>
+
+          <div class="field">
+            <label for="efficiency">Pump Efficiency (%)</label>
+            <input type="number" id="efficiency" value="72" step="any">
+          </div>
+
+          <div class="field">
+            <label for="motorEfficiency">Motor Efficiency (%)</label>
+            <input type="number" id="motorEfficiency" value="94" step="any">
+          </div>
+
+          <div class="field">
+            <label for="electricityCost">Electricity Cost ($/kWh)</label>
+            <input type="number" id="electricityCost" value="0.08" step="any">
+          </div>
+
+          <div class="field">
+            <label for="operatingHours">Operating Hours per Year</label>
+            <input type="number" id="operatingHours" value="8000" step="any">
+          </div>
+
+          <div class="field">
+            <label for="bepFlow">Pump BEP Flow Rate</label>
+            <input type="number" id="bepFlow" value="140" step="any">
+          </div>
+
+          <div class="field">
+            <label for="bepFlowUnit">BEP Flow Unit</label>
+            <select id="bepFlowUnit">
+              <option value="m3h" selected>m³/h</option>
+              <option value="m3s">m³/s</option>
+              <option value="lps">L/s</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="minPreferredBep">Preferred BEP Range Lower Bound (%)</label>
+            <input type="number" id="minPreferredBep" value="80" step="any">
+            <small>Common screening range: 80–110%</small>
+          </div>
+
+          <div class="field">
+            <label for="maxPreferredBep">Preferred BEP Range Upper Bound (%)</label>
+            <input type="number" id="maxPreferredBep" value="110" step="any">
+          </div>
+
+          <div class="field full-width">
+            <label for="referenceEfficiency">Reference / Target Pump Efficiency (%)</label>
+            <input type="number" id="referenceEfficiency" value="80" step="any">
+            <small>Used to estimate energy penalty versus a better operating point or better pump selection</small>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" onclick="calculatePump()">Calculate</button>
+          <button type="button" class="btn-secondary" onclick="resetPumpCalculator()">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Results</h3>
+
+        <div class="results-grid">
+          <div class="result-box">
+            <div class="label">Hydraulic Power</div>
+            <div class="value" id="hydraulicPowerResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Pump Shaft Power</div>
+            <div class="value" id="shaftPowerResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Electrical Input Power</div>
+            <div class="value" id="inputPowerResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Annual Energy Use</div>
+            <div class="value" id="annualEnergyResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Annual Electricity Cost</div>
+            <div class="value" id="annualCostResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">BEP Flow Ratio</div>
+            <div class="value" id="bepRatioResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Operating Zone</div>
+            <div class="value" id="operatingZoneResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Flow Deviation from BEP</div>
+            <div class="value" id="flowDeviationResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Estimated Energy Penalty</div>
+            <div class="value" id="penaltyCostResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Overall Wire-to-Water Efficiency</div>
+            <div class="value" id="overallEfficiencyResult">-</div>
+          </div>
+        </div>
+
+        <div class="curve-wrap">
+          <h3 style="margin-top:1.5rem;">Operating Point Visualization</h3>
+          <div class="curve-box">
+            <canvas id="pumpCanvas" width="520" height="320"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Engineering Interpretation</h2>
+    <div class="card">
+      <ul class="message-list" id="interpretationList">
+        <li>Enter your data and click <strong>Calculate</strong>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h3>Need a deeper review?</h3>
+      <p>
+        If your pump appears to be running far from BEP or consuming excessive energy, the problem may be related
+        to control philosophy, oversizing, throttling losses, hydraulic mismatch, or system resistance.
+      </p>
+      <p>
+        Alatau Tech Consulting supports pump system review, control improvement, debottlenecking, and OPEX-focused
+        engineering studies.
+      </p>
+      <p style="margin-bottom:0;">
+        <a href="index.html#contact" style="color:#003366; font-weight:700; text-decoration:none;">Go to Contact Page</a>
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div style="font-size: 0.95rem;">
+      &copy; 2025 Alatau Tech Consulting. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    const G = 9.81;
+
+    function convertFlowToM3s(value, unit) {
+      if (unit === "m3h") return value / 3600;
+      if (unit === "lps") return value / 1000;
+      return value;
+    }
+
+    function fmt(value, decimals = 2) {
+      if (!isFinite(value)) return "-";
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function drawPumpChart(flowM3s, bepFlowM3s, minRatio, maxRatio) {
+      const canvas = document.getElementById("pumpCanvas");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const margin = { top: 25, right: 25, bottom: 45, left: 55 };
+      const plotW = w - margin.left - margin.right;
+      const plotH = h - margin.top - margin.bottom;
+
+      const maxFlow = Math.max(flowM3s, bepFlowM3s) * 1.6 || 1;
+      const minFlowPref = bepFlowM3s * (minRatio / 100);
+      const maxFlowPref = bepFlowM3s * (maxRatio / 100);
+
+      function xScale(x) {
+        return margin.left + (x / maxFlow) * plotW;
+      }
+
+      function yScale(y) {
+        return margin.top + plotH - (y * plotH);
+      }
+
+      // axes
+      ctx.strokeStyle = "#003366";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, margin.top);
+      ctx.lineTo(margin.left, margin.top + plotH);
+      ctx.lineTo(margin.left + plotW, margin.top + plotH);
+      ctx.stroke();
+
+      // preferred BEP band
+      ctx.fillStyle = "rgba(0, 51, 102, 0.10)";
+      ctx.fillRect(
+        xScale(minFlowPref),
+        margin.top,
+        Math.max(0, xScale(maxFlowPref) - xScale(minFlowPref)),
+        plotH
+      );
+
+      // stylized head curve
+      ctx.strokeStyle = "#003366";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i <= 100; i++) {
+        const q = (maxFlow * i) / 100;
+        const qn = q / maxFlow;
+        const yNorm = 0.85 - 0.65 * Math.pow(qn, 1.7);
+        const x = xScale(q);
+        const y = yScale(Math.max(0.08, yNorm));
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // BEP marker
+      const bepX = xScale(bepFlowM3s);
+      ctx.strokeStyle = "#0b6b2f";
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(bepX, margin.top);
+      ctx.lineTo(bepX, margin.top + plotH);
+      ctx.stroke();
+
+      // operating point marker
+      const opX = xScale(flowM3s);
+      const qnOp = flowM3s / maxFlow;
+      const opYNorm = 0.85 - 0.65 * Math.pow(qnOp, 1.7);
+      const opY = yScale(Math.max(0.08, opYNorm));
+
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#a00000";
+      ctx.beginPath();
+      ctx.arc(opX, opY, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // labels
+      ctx.fillStyle = "#333";
+      ctx.font = "12px Poppins";
+      ctx.fillText("Relative head curve", margin.left + 8, margin.top + 14);
+      ctx.fillText("Flow", margin.left + plotW / 2 - 12, h - 12);
+
+      ctx.save();
+      ctx.translate(15, margin.top + plotH / 2 + 20);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("Relative head", 0, 0);
+      ctx.restore();
+
+      ctx.fillStyle = "#0b6b2f";
+      ctx.fillText("BEP", Math.min(w - 45, bepX + 6), margin.top + 16);
+
+      ctx.fillStyle = "#a00000";
+      ctx.fillText("Operating point", Math.min(w - 105, opX + 8), Math.max(margin.top + 18, opY - 10));
+
+      // x ticks
+      ctx.fillStyle = "#555";
+      ctx.font = "11px Poppins";
+      for (let i = 0; i <= 4; i++) {
+        const q = (maxFlow * i) / 4;
+        const x = xScale(q);
+        ctx.beginPath();
+        ctx.moveTo(x, margin.top + plotH);
+        ctx.lineTo(x, margin.top + plotH + 5);
+        ctx.strokeStyle = "#003366";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillText(fmt(q * 3600, 0) + " m³/h", x - 18, margin.top + plotH + 18);
+      }
+    }
+
+    function calculatePump() {
+      const density = parseFloat(document.getElementById("density").value);
+      const flowRate = parseFloat(document.getElementById("flowRate").value);
+      const flowUnit = document.getElementById("flowUnit").value;
+      const head = parseFloat(document.getElementById("head").value);
+      const efficiency = parseFloat(document.getElementById("efficiency").value);
+      const motorEfficiency = parseFloat(document.getElementById("motorEfficiency").value);
+      const electricityCost = parseFloat(document.getElementById("electricityCost").value);
+      const operatingHours = parseFloat(document.getElementById("operatingHours").value);
+      const bepFlow = parseFloat(document.getElementById("bepFlow").value);
+      const bepFlowUnit = document.getElementById("bepFlowUnit").value;
+      const minPreferredBep = parseFloat(document.getElementById("minPreferredBep").value);
+      const maxPreferredBep = parseFloat(document.getElementById("maxPreferredBep").value);
+      const referenceEfficiency = parseFloat(document.getElementById("referenceEfficiency").value);
+
+      if (
+        !isFinite(density) || density <= 0 ||
+        !isFinite(flowRate) || flowRate <= 0 ||
+        !isFinite(head) || head <= 0 ||
+        !isFinite(efficiency) || efficiency <= 0 || efficiency > 100 ||
+        !isFinite(motorEfficiency) || motorEfficiency <= 0 || motorEfficiency > 100 ||
+        !isFinite(electricityCost) || electricityCost < 0 ||
+        !isFinite(operatingHours) || operatingHours < 0 ||
+        !isFinite(bepFlow) || bepFlow <= 0 ||
+        !isFinite(minPreferredBep) || minPreferredBep <= 0 ||
+        !isFinite(maxPreferredBep) || maxPreferredBep <= minPreferredBep ||
+        !isFinite(referenceEfficiency) || referenceEfficiency <= 0 || referenceEfficiency > 100
+      ) {
+        alert("Please enter valid values. Efficiencies must be between 0 and 100.");
+        return;
+      }
+
+      const Q = convertFlowToM3s(flowRate, flowUnit);
+      const Qbep = convertFlowToM3s(bepFlow, bepFlowUnit);
+      const etaPump = efficiency / 100;
+      const etaMotor = motorEfficiency / 100;
+      const etaReference = referenceEfficiency / 100;
+
+      const hydraulicPowerW = density * G * Q * head;
+      const shaftPowerW = hydraulicPowerW / etaPump;
+      const inputPowerW = shaftPowerW / etaMotor;
+      const annualEnergyKWh = (inputPowerW / 1000) * operatingHours;
+      const annualCost = annualEnergyKWh * electricityCost;
+
+      const bepRatio = (Q / Qbep) * 100;
+      const flowDeviation = ((Q - Qbep) / Qbep) * 100;
+      const overallEfficiency = etaPump * etaMotor;
+
+      const referenceInputPowerW = hydraulicPowerW / (etaReference * etaMotor);
+      const penaltyPowerW = inputPowerW - referenceInputPowerW;
+      const penaltyEnergyKWh = Math.max(0, penaltyPowerW / 1000 * operatingHours);
+      const penaltyCost = penaltyEnergyKWh * electricityCost;
+
+      let operatingZone = "Near BEP";
+      if (bepRatio < minPreferredBep) {
+        operatingZone = "Left of BEP";
+      } else if (bepRatio > maxPreferredBep) {
+        operatingZone = "Right of BEP";
+      }
+
+      document.getElementById("hydraulicPowerResult").textContent = fmt(hydraulicPowerW / 1000, 2) + " kW";
+      document.getElementById("shaftPowerResult").textContent = fmt(shaftPowerW / 1000, 2) + " kW";
+      document.getElementById("inputPowerResult").textContent = fmt(inputPowerW / 1000, 2) + " kW";
+      document.getElementById("annualEnergyResult").textContent = fmt(annualEnergyKWh, 0) + " kWh/yr";
+      document.getElementById("annualCostResult").textContent = "$" + fmt(annualCost, 0) + "/yr";
+      document.getElementById("bepRatioResult").textContent = fmt(bepRatio, 1) + "%";
+      document.getElementById("operatingZoneResult").textContent = operatingZone;
+      document.getElementById("flowDeviationResult").textContent = fmt(flowDeviation, 1) + "%";
+      document.getElementById("penaltyCostResult").textContent = "$" + fmt(penaltyCost, 0) + "/yr";
+      document.getElementById("overallEfficiencyResult").textContent = fmt(overallEfficiency * 100, 1) + "%";
+
+      const messages = [];
+
+      if (bepRatio < minPreferredBep) {
+        messages.push(`<li><span class="bad">Operating left of BEP:</span> The pump appears to be running below the preferred BEP window. This can increase radial thrust, recirculation, vibration, and reliability risk.</li>`);
+      } else if (bepRatio > maxPreferredBep) {
+        messages.push(`<li><span class="bad">Operating right of BEP:</span> The pump appears to be running above the preferred BEP window. This may lead to reduced efficiency, unstable operation, or limited hydraulic margin.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Operating near BEP:</span> The calculated flow lies within the preferred BEP band, which is usually favorable for efficiency and mechanical reliability.</li>`);
+      }
+
+      if (efficiency < 65) {
+        messages.push(`<li><span class="bad">Low pump efficiency:</span> The assumed pump efficiency is quite low. This suggests meaningful electrical waste and may indicate poor operating point, oversized equipment, wear, or unsuitable pump selection.</li>`);
+      } else if (efficiency < 75) {
+        messages.push(`<li><span class="warning">Moderate pump efficiency:</span> Efficiency is workable but may still leave room for optimization depending on service and pump size.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Good pump efficiency:</span> The assumed efficiency is relatively healthy for a screening calculation.</li>`);
+      }
+
+      if (annualCost > 50000) {
+        messages.push(`<li><span class="bad">High annual electricity cost:</span> Estimated annual cost is about <strong>$${fmt(annualCost, 0)}/year</strong>. This pump is a strong candidate for an energy and operating point review.</li>`);
+      } else if (annualCost > 10000) {
+        messages.push(`<li><span class="warning">Noticeable annual electricity cost:</span> Estimated cost is about <strong>$${fmt(annualCost, 0)}/year</strong>. Improvements in efficiency or control may create measurable savings.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Energy cost looks moderate:</span> The estimated annual electricity cost is not extreme for this screening case.</li>`);
+      }
+
+      if (penaltyCost > 10000) {
+        messages.push(`<li><span class="bad">Meaningful energy penalty:</span> Compared with a target efficiency of ${fmt(referenceEfficiency, 1)}%, this case may be wasting around <strong>$${fmt(penaltyCost, 0)}/year</strong> in extra power consumption.</li>`);
+      } else if (penaltyCost > 0) {
+        messages.push(`<li><span class="warning">Some energy penalty exists:</span> There is a measurable efficiency gap versus the reference case. This may justify a closer hydraulic or control review.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Little visible energy penalty:</span> The current case does not show a major penalty relative to the selected reference efficiency.</li>`);
+      }
+
+      if (Math.abs(flowDeviation) > 20) {
+        messages.push(`<li><span class="warning">Large BEP deviation:</span> The operating flow differs from BEP by ${fmt(Math.abs(flowDeviation), 1)}%. A pump system review should consider throttling, recycle, control valve losses, and actual system resistance.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Limited BEP deviation:</span> The operating point is not dramatically far from the BEP flow.</li>`);
+      }
+
+      if (annualCost > 10000 || Math.abs(flowDeviation) > 20 || efficiency < 70) {
+        messages.push(`<li><strong>Engineering insight:</strong> This pump may be operating away from its most economical condition. The next checks should usually be system curve, control valve pressure losses, minimum flow recycle behavior, and whether the installed pump is oversized for real demand.</li>`);
+      } else {
+        messages.push(`<li><strong>Engineering insight:</strong> This case looks reasonably balanced as a screening result, though a full assessment should still include vendor curve confirmation, NPSH margin, control behavior, and actual operating envelope.</li>`);
+      }
+
+      document.getElementById("interpretationList").innerHTML = messages.join("");
+      drawPumpChart(Q, Qbep, minPreferredBep, maxPreferredBep);
+    }
+
+    function resetPumpCalculator() {
+      document.getElementById("density").value = 1000;
+      document.getElementById("flowRate").value = 120;
+      document.getElementById("flowUnit").value = "m3h";
+      document.getElementById("head").value = 45;
+      document.getElementById("efficiency").value = 72;
+      document.getElementById("motorEfficiency").value = 94;
+      document.getElementById("electricityCost").value = 0.08;
+      document.getElementById("operatingHours").value = 8000;
+      document.getElementById("bepFlow").value = 140;
+      document.getElementById("bepFlowUnit").value = "m3h";
+      document.getElementById("minPreferredBep").value = 80;
+      document.getElementById("maxPreferredBep").value = 110;
+      document.getElementById("referenceEfficiency").value = 80;
+
+      const outputIds = [
+        "hydraulicPowerResult",
+        "shaftPowerResult",
+        "inputPowerResult",
+        "annualEnergyResult",
+        "annualCostResult",
+        "bepRatioResult",
+        "operatingZoneResult",
+        "flowDeviationResult",
+        "penaltyCostResult",
+        "overallEfficiencyResult"
+      ];
+
+      outputIds.forEach(id => {
+        document.getElementById(id).textContent = "-";
+      });
+
+      document.getElementById("interpretationList").innerHTML =
+        "<li>Enter your data and click <strong>Calculate</strong>.</li>";
+
+      const canvas = document.getElementById("pumpCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    calculatePump();
+  </script>
+</body>
+</html>
