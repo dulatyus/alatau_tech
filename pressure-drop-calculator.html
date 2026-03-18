@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic SEO -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pressure Drop Calculator | Alatau Tech Consulting</title>
+  <meta name="description" content="Estimate pressure drop, energy loss, pump power, and annual pumping cost for pipelines and process lines.">
+  <meta name="keywords" content="pressure drop calculator, darcy weisbach, pipeline pressure loss, pump power, process engineering, oil and gas calculator">
+  <meta name="author" content="Alatau Tech Consulting">
+  <link rel="canonical" href="https://alatau.tech/pressure-drop-calculator.html">
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Global page style */
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Top language bar */
+    .language-bar {
+      background: #f1f1f1;
+      text-align: right;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .language-bar a {
+      text-decoration: none;
+      margin: 0 0.5rem;
+      color: #003366;
+      font-weight: 600;
+    }
+
+    /* Main nav */
+    nav {
+      background: #003366;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-weight: 600;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* Hero section */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 2rem;
+      background: #003366;
+      color: #fff;
+      min-height: 40vh;
+    }
+
+    .hero-text {
+      flex: 1 1 600px;
+      max-width: 850px;
+      text-align: center;
+    }
+
+    .hero-text h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero-text p {
+      font-size: 1.05rem;
+      margin: 0 auto;
+      max-width: 760px;
+    }
+
+    /* Generic content section */
+    section {
+      padding: 3rem 1.25rem;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Layout for calculator blocks */
+    .calc-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    /* Card style reused across page */
+    .card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #003366;
+    }
+
+    /* Form grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 1rem 1.2rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field label {
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: #003366;
+      font-size: 0.95rem;
+    }
+
+    .field input,
+    .field select {
+      padding: 0.75rem;
+      border: 1px solid #cfd6de;
+      border-radius: 8px;
+      font-size: 0.96rem;
+      background: #fff;
+    }
+
+    .field small {
+      margin-top: 0.3rem;
+      color: #666;
+      font-size: 0.82rem;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Action buttons */
+    .button-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    button {
+      padding: 0.9rem 1.25rem;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    /* Result tiles */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .result-box {
+      background: #f8fbff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .result-box .label {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0.35rem;
+    }
+
+    .result-box .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #003366;
+    }
+
+    /* Messages / interpretation */
+    .message-list {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .message-list li {
+      margin-bottom: 0.7rem;
+    }
+
+    .warning {
+      color: #a15c00;
+      font-weight: 600;
+    }
+
+    .good {
+      color: #0b6b2f;
+      font-weight: 600;
+    }
+
+    .bad {
+      color: #a00000;
+      font-weight: 600;
+    }
+
+    /* Note / assumptions box */
+    .note {
+      background: #eef5fb;
+      border-left: 4px solid #003366;
+      padding: 1rem 1rem 1rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    /* Footer */
+    footer {
+      background: #003366;
+      color: #fff;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+
+    /* Mobile */
+    @media (max-width: 900px) {
+      .calc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid,
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        justify-content: center;
+      }
+
+      .hero-text h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Pressure Drop Calculator",
+    "url": "https://alatau.tech/pressure-drop-calculator.html",
+    "description": "Pipeline and process line pressure drop calculator with annual energy loss and pumping cost estimate.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Alatau Tech Consulting",
+      "url": "https://alatau.tech"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Language bar copied from your main site pattern -->
+  <div class="language-bar">
+    <a href="index-kz.html" onclick="document.cookie='langPref=kk; path=/';">
+      <img src="flags/kz.png" alt="KZ" style="height:16px; vertical-align:middle;"> KZ
+    </a> |
+    <a href="index.html" onclick="document.cookie='langPref=en; path=/';">
+      <img src="flags/gb.png" alt="EN" style="height:16px; vertical-align:middle;"> EN
+    </a> |
+    <a href="index-ru.html" onclick="document.cookie='langPref=ru; path=/';">
+      <img src="flags/ru.png" alt="RU" style="height:16px; vertical-align:middle;"> RU
+    </a>
+  </div>
+
+  <!-- Main nav -->
+  <nav>
+    <div><a href="index.html">Alatau Tech Consulting</a></div>
+    <div>
+      <a href="index.html#about">About</a>
+      <a href="index.html#services">Services</a>
+      <a href="index.html#industries">Industries</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header>
+    <div class="hero-text">
+      <h1>Pressure Drop Calculator for Pipelines & Process Lines</h1>
+      <p>
+        Estimate pressure drop, flow velocity, Reynolds number, pump power, and annual energy cost
+        using a practical Darcy–Weisbach approach for incompressible liquids.
+      </p>
+    </div>
+  </header>
+
+  <!-- Intro -->
+  <section>
+    <div class="note">
+      <strong>Scope of this version:</strong> incompressible liquid flow in a single straight pipe section with elevation change.
+      Minor losses from fittings, valves, elbows, and tees are not included yet. This version is designed as a practical engineering screening tool.
+    </div>
+  </section>
+
+  <!-- Main calculator -->
+  <section>
+    <h2>Calculator</h2>
+
+    <div class="calc-layout">
+      <!-- INPUT CARD -->
+      <div class="card">
+        <h3>Input Data</h3>
+
+        <div class="form-grid">
+          <!-- Fluid density -->
+          <div class="field">
+            <label for="density">Fluid Density (kg/m³)</label>
+            <input type="number" id="density" value="1000" step="any">
+            <small>Example: water ≈ 1000</small>
+          </div>
+
+          <!-- Dynamic viscosity in cP -->
+          <div class="field">
+            <label for="viscosity">Dynamic Viscosity (cP)</label>
+            <input type="number" id="viscosity" value="1" step="any">
+            <small>1 cP = 0.001 Pa·s</small>
+          </div>
+
+          <!-- Flow rate -->
+          <div class="field">
+            <label for="flowRate">Flow Rate</label>
+            <input type="number" id="flowRate" value="100" step="any">
+          </div>
+
+          <!-- Flow rate unit -->
+          <div class="field">
+            <label for="flowUnit">Flow Unit</label>
+            <select id="flowUnit">
+              <option value="m3h" selected>m³/h</option>
+              <option value="m3s">m³/s</option>
+              <option value="lps">L/s</option>
+            </select>
+          </div>
+
+          <!-- Pipe diameter -->
+          <div class="field">
+            <label for="diameter">Pipe Inner Diameter</label>
+            <input type="number" id="diameter" value="100" step="any">
+          </div>
+
+          <!-- Diameter unit -->
+          <div class="field">
+            <label for="diameterUnit">Diameter Unit</label>
+            <select id="diameterUnit">
+              <option value="mm" selected>mm</option>
+              <option value="m">m</option>
+              <option value="in">inch</option>
+            </select>
+          </div>
+
+          <!-- Pipe length -->
+          <div class="field">
+            <label for="length">Pipe Length</label>
+            <input type="number" id="length" value="250" step="any">
+          </div>
+
+          <!-- Length unit -->
+          <div class="field">
+            <label for="lengthUnit">Length Unit</label>
+            <select id="lengthUnit">
+              <option value="m" selected>m</option>
+              <option value="ft">ft</option>
+            </select>
+          </div>
+
+          <!-- Pipe roughness -->
+          <div class="field">
+            <label for="roughness">Absolute Roughness</label>
+            <input type="number" id="roughness" value="0.045" step="any">
+          </div>
+
+          <!-- Roughness unit -->
+          <div class="field">
+            <label for="roughnessUnit">Roughness Unit</label>
+            <select id="roughnessUnit">
+              <option value="mm" selected>mm</option>
+              <option value="m">m</option>
+            </select>
+          </div>
+
+          <!-- Elevation change -->
+          <div class="field">
+            <label for="elevation">Elevation Change (+ uphill / - downhill) (m)</label>
+            <input type="number" id="elevation" value="0" step="any">
+            <small>Positive means the outlet is above the inlet</small>
+          </div>
+
+          <!-- Pump efficiency -->
+          <div class="field">
+            <label for="efficiency">Pump Efficiency (%)</label>
+            <input type="number" id="efficiency" value="70" step="any">
+          </div>
+
+          <!-- Electricity cost -->
+          <div class="field">
+            <label for="electricityCost">Electricity Cost ($/kWh)</label>
+            <input type="number" id="electricityCost" value="0.08" step="any">
+          </div>
+
+          <!-- Operating hours -->
+          <div class="field">
+            <label for="operatingHours">Operating Hours per Year</label>
+            <input type="number" id="operatingHours" value="8000" step="any">
+          </div>
+
+          <!-- Target velocity -->
+          <div class="field full-width">
+            <label for="targetVelocity">Optional Target Velocity for Suggested Diameter (m/s)</label>
+            <input type="number" id="targetVelocity" value="2" step="any">
+            <small>Used only for the suggested diameter estimate</small>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" onclick="calculatePressureDrop()">Calculate</button>
+          <button type="button" class="btn-secondary" onclick="resetCalculator()">Reset</button>
+        </div>
+      </div>
+
+      <!-- RESULTS CARD -->
+      <div class="card">
+        <h3>Results</h3>
+
+        <div class="results-grid">
+          <div class="result-box">
+            <div class="label">Velocity</div>
+            <div class="value" id="velocityResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Reynolds Number</div>
+            <div class="value" id="reynoldsResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Friction Factor</div>
+            <div class="value" id="frictionResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Frictional Pressure Drop</div>
+            <div class="value" id="dpFrictionResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Static Pressure Change</div>
+            <div class="value" id="dpStaticResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Total Pressure Change</div>
+            <div class="value" id="dpTotalResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Total Head Loss</div>
+            <div class="value" id="headLossResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Hydraulic Power</div>
+            <div class="value" id="hydraulicPowerResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Required Pump Power</div>
+            <div class="value" id="pumpPowerResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Annual Energy Cost</div>
+            <div class="value" id="annualCostResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Suggested Diameter</div>
+            <div class="value" id="suggestedDiameterResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Flow Regime</div>
+            <div class="value" id="flowRegimeResult">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interpretation -->
+  <section>
+    <h2>Engineering Interpretation</h2>
+    <div class="card">
+      <ul class="message-list" id="interpretationList">
+        <li>Enter your data and click <strong>Calculate</strong>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Contact callout -->
+  <section>
+    <div class="card">
+      <h3>Need a deeper review?</h3>
+      <p>
+        If your system shows high pressure drop, excessive pumping cost, or an oversized velocity profile,
+        that may indicate a design or operating issue worth reviewing in more detail.
+      </p>
+      <p>
+        Alatau Tech Consulting supports troubleshooting, debottlenecking, hydraulic review, control improvement,
+        and practical OPEX reduction studies.
+      </p>
+      <p style="margin-bottom:0;">
+        <a href="index.html#contact" style="color:#003366; font-weight:700; text-decoration:none;">Go to Contact Page</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div style="font-size: 0.95rem;">
+      &copy; 2025 Alatau Tech Consulting. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // Gravitational acceleration constant
+    const G = 9.81;
+
+    // Convert flow rate to m3/s
+    function convertFlowToM3s(value, unit) {
+      if (unit === "m3h") return value / 3600;
+      if (unit === "lps") return value / 1000;
+      return value;
+    }
+
+    // Convert diameter to meters
+    function convertDiameterToMeters(value, unit) {
+      if (unit === "mm") return value / 1000;
+      if (unit === "in") return value * 0.0254;
+      return value;
+    }
+
+    // Convert length to meters
+    function convertLengthToMeters(value, unit) {
+      if (unit === "ft") return value * 0.3048;
+      return value;
+    }
+
+    // Convert roughness to meters
+    function convertRoughnessToMeters(value, unit) {
+      if (unit === "mm") return value / 1000;
+      return value;
+    }
+
+    // Format a number with smart precision
+    function fmt(value, decimals = 3) {
+      if (!isFinite(value)) return "-";
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    // Friction factor:
+    // - laminar: 64/Re
+    // - turbulent/transitional: Swamee-Jain approximation
+    function calculateFrictionFactor(re, roughness, diameter) {
+      if (re < 2300) {
+        return 64 / re;
+      }
+
+      // Swamee-Jain explicit equation for turbulent flow
+      return 0.25 / Math.pow(
+        Math.log10((roughness / (3.7 * diameter)) + (5.74 / Math.pow(re, 0.9))),
+        2
+      );
+    }
+
+    // Main calculator function
+    function calculatePressureDrop() {
+      // Read all input values
+      const density = parseFloat(document.getElementById("density").value);
+      const viscosityCp = parseFloat(document.getElementById("viscosity").value);
+      const flowRate = parseFloat(document.getElementById("flowRate").value);
+      const flowUnit = document.getElementById("flowUnit").value;
+      const diameter = parseFloat(document.getElementById("diameter").value);
+      const diameterUnit = document.getElementById("diameterUnit").value;
+      const length = parseFloat(document.getElementById("length").value);
+      const lengthUnit = document.getElementById("lengthUnit").value;
+      const roughness = parseFloat(document.getElementById("roughness").value);
+      const roughnessUnit = document.getElementById("roughnessUnit").value;
+      const elevation = parseFloat(document.getElementById("elevation").value);
+      const efficiencyPercent = parseFloat(document.getElementById("efficiency").value);
+      const electricityCost = parseFloat(document.getElementById("electricityCost").value);
+      const operatingHours = parseFloat(document.getElementById("operatingHours").value);
+      const targetVelocity = parseFloat(document.getElementById("targetVelocity").value);
+
+      // Basic validation
+      if (
+        !isFinite(density) || density <= 0 ||
+        !isFinite(viscosityCp) || viscosityCp <= 0 ||
+        !isFinite(flowRate) || flowRate <= 0 ||
+        !isFinite(diameter) || diameter <= 0 ||
+        !isFinite(length) || length <= 0 ||
+        !isFinite(roughness) || roughness < 0 ||
+        !isFinite(efficiencyPercent) || efficiencyPercent <= 0 || efficiencyPercent > 100 ||
+        !isFinite(electricityCost) || electricityCost < 0 ||
+        !isFinite(operatingHours) || operatingHours < 0 ||
+        !isFinite(targetVelocity) || targetVelocity <= 0
+      ) {
+        alert("Please enter valid positive values. Efficiency must be between 0 and 100.");
+        return;
+      }
+
+      // Unit conversions
+      const Q = convertFlowToM3s(flowRate, flowUnit);                  // m3/s
+      const D = convertDiameterToMeters(diameter, diameterUnit);       // m
+      const L = convertLengthToMeters(length, lengthUnit);             // m
+      const eps = convertRoughnessToMeters(roughness, roughnessUnit);  // m
+      const mu = viscosityCp / 1000;                                   // Pa·s
+      const eta = efficiencyPercent / 100;                             // decimal
+
+      // Core hydraulic calculations
+      const area = Math.PI * Math.pow(D, 2) / 4;
+      const velocity = Q / area;
+      const reynolds = (density * velocity * D) / mu;
+      const frictionFactor = calculateFrictionFactor(reynolds, eps, D);
+
+      // Darcy-Weisbach friction head loss
+      const frictionHeadLoss = frictionFactor * (L / D) * (Math.pow(velocity, 2) / (2 * G));
+
+      // Static head due to elevation change
+      const staticHead = elevation;
+
+      // Total head requirement
+      const totalHead = frictionHeadLoss + staticHead;
+
+      // Pressure changes in Pa
+      const dpFriction = density * G * frictionHeadLoss;
+      const dpStatic = density * G * staticHead;
+      const dpTotal = density * G * totalHead;
+
+      // Hydraulic power in watts
+      const hydraulicPowerW = density * G * Q * totalHead;
+
+      // Required shaft/electrical power in watts
+      const pumpPowerW = hydraulicPowerW / eta;
+
+      // Annual energy in kWh
+      const annualEnergyKWh = (pumpPowerW / 1000) * operatingHours;
+
+      // Annual electricity cost
+      const annualCost = annualEnergyKWh * electricityCost;
+
+      // Suggested diameter based on target velocity
+      const suggestedDiameterM = Math.sqrt((4 * Q) / (Math.PI * targetVelocity));
+      const suggestedDiameterMM = suggestedDiameterM * 1000;
+
+      // Flow regime label
+      let flowRegime = "Turbulent";
+      if (reynolds < 2300) {
+        flowRegime = "Laminar";
+      } else if (reynolds >= 2300 && reynolds < 4000) {
+        flowRegime = "Transitional";
+      }
+
+      // Write outputs to page
+      document.getElementById("velocityResult").textContent = fmt(velocity, 3) + " m/s";
+      document.getElementById("reynoldsResult").textContent = fmt(reynolds, 0);
+      document.getElementById("frictionResult").textContent = fmt(frictionFactor, 4);
+      document.getElementById("dpFrictionResult").textContent = fmt(dpFriction / 100000, 3) + " bar";
+      document.getElementById("dpStaticResult").textContent = fmt(dpStatic / 100000, 3) + " bar";
+      document.getElementById("dpTotalResult").textContent = fmt(dpTotal / 100000, 3) + " bar";
+      document.getElementById("headLossResult").textContent = fmt(totalHead, 2) + " m";
+      document.getElementById("hydraulicPowerResult").textContent = fmt(hydraulicPowerW / 1000, 2) + " kW";
+      document.getElementById("pumpPowerResult").textContent = fmt(pumpPowerW / 1000, 2) + " kW";
+      document.getElementById("annualCostResult").textContent = "$" + fmt(annualCost, 0) + "/yr";
+      document.getElementById("suggestedDiameterResult").textContent = fmt(suggestedDiameterMM, 0) + " mm";
+      document.getElementById("flowRegimeResult").textContent = flowRegime;
+
+      // Build interpretation messages
+      const messages = [];
+
+      // Velocity interpretation
+      if (velocity < 1) {
+        messages.push(`<li><span class="warning">Low velocity:</span> Flow velocity is relatively low. This may reduce friction loss, but depending on service it can raise concerns such as solids settling or poor line flushing.</li>`);
+      } else if (velocity >= 1 && velocity <= 3) {
+        messages.push(`<li><span class="good">Reasonable velocity range:</span> The calculated velocity is often acceptable for many liquid services, assuming no special erosion or settling constraints.</li>`);
+      } else {
+        messages.push(`<li><span class="bad">High velocity:</span> The line velocity is high. This may increase pressure loss, pumping cost, noise, and erosion risk.</li>`);
+      }
+
+      // Pressure drop interpretation
+      if (dpTotal / 100000 > 1.5) {
+        messages.push(`<li><span class="bad">Significant pressure drop:</span> The total pressure change is above 1.5 bar across this segment. This may indicate avoidable energy loss or an undersized line.</li>`);
+      } else if (dpTotal / 100000 > 0.5) {
+        messages.push(`<li><span class="warning">Moderate pressure drop:</span> The pressure change is noticeable and worth checking against your available pump margin and design intent.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Pressure drop is relatively modest:</span> The line does not appear excessively restrictive based on this screening calculation.</li>`);
+      }
+
+      // Cost interpretation
+      if (annualCost > 25000) {
+        messages.push(`<li><span class="bad">High annual energy cost:</span> Estimated pumping cost is about <strong>$${fmt(annualCost, 0)}/year</strong>. Your system may be wasting a meaningful amount of money due to hydraulic losses.</li>`);
+      } else if (annualCost > 5000) {
+        messages.push(`<li><span class="warning">Noticeable annual pumping cost:</span> Estimated cost is <strong>$${fmt(annualCost, 0)}/year</strong>. There may be value in reviewing line sizing, control strategy, or operating point.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Energy cost impact appears limited:</span> Estimated annual pumping cost is relatively low for this line segment.</li>`);
+      }
+
+      // Suggested diameter comparison
+      if (suggestedDiameterMM > (D * 1000 * 1.1)) {
+        messages.push(`<li><span class="warning">Diameter improvement opportunity:</span> To reach a target velocity of ${fmt(targetVelocity, 2)} m/s, an approximate internal diameter of <strong>${fmt(suggestedDiameterMM, 0)} mm</strong> would be needed. A larger line could reduce OPEX.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Current diameter is broadly aligned:</span> Based on the target velocity of ${fmt(targetVelocity, 2)} m/s, the current line size does not look severely undersized.</li>`);
+      }
+
+      // Flow regime
+      if (flowRegime === "Laminar") {
+        messages.push(`<li><span class="warning">Laminar regime:</span> The flow is laminar. Be careful when comparing this result with systems normally expected to operate in turbulent industrial flow.</li>`);
+      } else if (flowRegime === "Transitional") {
+        messages.push(`<li><span class="warning">Transitional regime:</span> The Reynolds number lies in the transitional region. Real performance can be sensitive, so treat this as a screening result.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Turbulent regime:</span> The result is in the turbulent range, which is common for many industrial liquid systems.</li>`);
+      }
+
+      // Final consulting-oriented insight
+      if (annualCost > 10000 || velocity > 3 || dpTotal / 100000 > 1) {
+        messages.push(`<li><strong>Engineering insight:</strong> This case shows at least one indicator of hydraulic inefficiency. It may be worth reviewing pipe sizing, operating flow, control valve losses, or pump selection to reduce OPEX.</li>`);
+      } else {
+        messages.push(`<li><strong>Engineering insight:</strong> This line appears reasonably balanced as a first-pass estimate, though a full review should still include fittings, valves, equipment losses, and operating envelope checks.</li>`);
+      }
+
+      document.getElementById("interpretationList").innerHTML = messages.join("");
+    }
+
+    // Reset calculator to defaults
+    function resetCalculator() {
+      document.getElementById("density").value = 1000;
+      document.getElementById("viscosity").value = 1;
+      document.getElementById("flowRate").value = 100;
+      document.getElementById("flowUnit").value = "m3h";
+      document.getElementById("diameter").value = 100;
+      document.getElementById("diameterUnit").value = "mm";
+      document.getElementById("length").value = 250;
+      document.getElementById("lengthUnit").value = "m";
+      document.getElementById("roughness").value = 0.045;
+      document.getElementById("roughnessUnit").value = "mm";
+      document.getElementById("elevation").value = 0;
+      document.getElementById("efficiency").value = 70;
+      document.getElementById("electricityCost").value = 0.08;
+      document.getElementById("operatingHours").value = 8000;
+      document.getElementById("targetVelocity").value = 2;
+
+      // Reset outputs
+      const outputIds = [
+        "velocityResult",
+        "reynoldsResult",
+        "frictionResult",
+        "dpFrictionResult",
+        "dpStaticResult",
+        "dpTotalResult",
+        "headLossResult",
+        "hydraulicPowerResult",
+        "pumpPowerResult",
+        "annualCostResult",
+        "suggestedDiameterResult",
+        "flowRegimeResult"
+      ];
+
+      outputIds.forEach(id => {
+        document.getElementById(id).textContent = "-";
+      });
+
+      document.getElementById("interpretationList").innerHTML =
+        "<li>Enter your data and click <strong>Calculate</strong>.</li>";
+    }
+
+    // Auto-run once on page load so the page does not look empty
+    calculatePressureDrop();
+  </script>
+</body>
+</html>
