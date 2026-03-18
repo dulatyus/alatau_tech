@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic SEO -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heat Exchanger Duty & LMTD Calculator | Alatau Tech Consulting</title>
+  <meta name="description" content="Estimate heat exchanger duty, LMTD, required area, fouling impact, and thermal underperformance risk for industrial services.">
+  <meta name="keywords" content="heat exchanger calculator, LMTD calculator, exchanger duty, required area, fouling factor, shell and tube, process engineering">
+  <meta name="author" content="Alatau Tech Consulting">
+  <link rel="canonical" href="https://alatau.tech/heat-exchanger-lmtd-calculator.html">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .language-bar {
+      background: #f1f1f1;
+      text-align: right;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .language-bar a {
+      text-decoration: none;
+      margin: 0 0.5rem;
+      color: #003366;
+      font-weight: 600;
+    }
+
+    nav {
+      background: #003366;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-weight: 600;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: #003366;
+      color: #fff;
+      min-height: 40vh;
+    }
+
+    .hero-text {
+      flex: 1 1 600px;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    .hero-text h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero-text p {
+      font-size: 1.05rem;
+      margin: 0 auto;
+      max-width: 760px;
+    }
+
+    section {
+      padding: 3rem 1.25rem;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 1.5rem;
+    }
+
+    .calc-layout {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #003366;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 1rem 1.2rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field label {
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: #003366;
+      font-size: 0.95rem;
+    }
+
+    .field input,
+    .field select {
+      padding: 0.75rem;
+      border: 1px solid #cfd6de;
+      border-radius: 8px;
+      font-size: 0.96rem;
+      background: #fff;
+    }
+
+    .field small {
+      margin-top: 0.3rem;
+      color: #666;
+      font-size: 0.82rem;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    button {
+      padding: 0.9rem 1.25rem;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .result-box {
+      background: #f8fbff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .result-box .label {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0.35rem;
+    }
+
+    .result-box .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #003366;
+    }
+
+    .message-list {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .message-list li {
+      margin-bottom: 0.7rem;
+    }
+
+    .warning {
+      color: #a15c00;
+      font-weight: 600;
+    }
+
+    .good {
+      color: #0b6b2f;
+      font-weight: 600;
+    }
+
+    .bad {
+      color: #a00000;
+      font-weight: 600;
+    }
+
+    .note {
+      background: #eef5fb;
+      border-left: 4px solid #003366;
+      padding: 1rem 1rem 1rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .chart-wrap {
+      margin-top: 1.25rem;
+    }
+
+    .chart-box {
+      background: #fff;
+      border: 1px solid #d6e4f2;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      display: block;
+      background: #fff;
+      border-radius: 8px;
+    }
+
+    footer {
+      background: #003366;
+      color: #fff;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 900px) {
+      .calc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid,
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        justify-content: center;
+      }
+
+      .hero-text h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Heat Exchanger Duty & LMTD Calculator",
+    "url": "https://alatau.tech/heat-exchanger-lmtd-calculator.html",
+    "description": "Estimate heat exchanger duty, LMTD, required area, fouling impact, and thermal underperformance risk.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Alatau Tech Consulting",
+      "url": "https://alatau.tech"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <div class="language-bar">
+    <a href="index-kz.html" onclick="document.cookie='langPref=kk; path=/';">
+      <img src="flags/kz.png" alt="KZ" style="height:16px; vertical-align:middle;"> KZ
+    </a> |
+    <a href="index.html" onclick="document.cookie='langPref=en; path=/';">
+      <img src="flags/gb.png" alt="EN" style="height:16px; vertical-align:middle;"> EN
+    </a> |
+    <a href="index-ru.html" onclick="document.cookie='langPref=ru; path=/';">
+      <img src="flags/ru.png" alt="RU" style="height:16px; vertical-align:middle;"> RU
+    </a>
+  </div>
+
+  <nav>
+    <div><a href="index.html">Alatau Tech Consulting</a></div>
+    <div>
+      <a href="index.html#about">About</a>
+      <a href="index.html#services">Services</a>
+      <a href="index.html#industries">Industries</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+  </nav>
+
+  <header>
+    <div class="hero-text">
+      <h1>Heat Exchanger Duty & LMTD Calculator</h1>
+      <p>
+        Estimate exchanger duty, log mean temperature difference, required clean and fouled area,
+        and whether the current service suggests thermal underperformance or fouling risk.
+      </p>
+    </div>
+  </header>
+
+  <section>
+    <div class="note">
+      <strong>Scope of this version:</strong> single-pass screening tool based on Q = m·Cp·ΔT and
+      LMTD-based area estimation. It is intended for fast engineering checks, not detailed mechanical
+      design or rating. Real projects should still confirm exchanger type, correction factor, phase change,
+      allowable pressure drop, and detailed fouling mechanisms.
+    </div>
+  </section>
+
+  <section>
+    <h2>Calculator</h2>
+
+    <div class="calc-layout">
+      <div class="card">
+        <h3>Input Data</h3>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="flowHot">Hot Stream Flow Rate</label>
+            <input type="number" id="flowHot" value="50" step="any">
+          </div>
+
+          <div class="field">
+            <label for="flowHotUnit">Hot Stream Flow Unit</label>
+            <select id="flowHotUnit">
+              <option value="kgh" selected>kg/h</option>
+              <option value="kgs">kg/s</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="cpHot">Hot Stream Cp (kJ/kg·K)</label>
+            <input type="number" id="cpHot" value="2.1" step="any">
+          </div>
+
+          <div class="field">
+            <label for="hotIn">Hot Inlet Temperature (°C)</label>
+            <input type="number" id="hotIn" value="180" step="any">
+          </div>
+
+          <div class="field">
+            <label for="hotOut">Hot Outlet Temperature (°C)</label>
+            <input type="number" id="hotOut" value="120" step="any">
+          </div>
+
+          <div class="field">
+            <label for="flowCold">Cold Stream Flow Rate</label>
+            <input type="number" id="flowCold" value="80" step="any">
+          </div>
+
+          <div class="field">
+            <label for="flowColdUnit">Cold Stream Flow Unit</label>
+            <select id="flowColdUnit">
+              <option value="kgh" selected>kg/h</option>
+              <option value="kgs">kg/s</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="cpCold">Cold Stream Cp (kJ/kg·K)</label>
+            <input type="number" id="cpCold" value="4.0" step="any">
+          </div>
+
+          <div class="field">
+            <label for="coldIn">Cold Inlet Temperature (°C)</label>
+            <input type="number" id="coldIn" value="40" step="any">
+          </div>
+
+          <div class="field">
+            <label for="coldOut">Cold Outlet Temperature (°C)</label>
+            <input type="number" id="coldOut" value="70" step="any">
+          </div>
+
+          <div class="field">
+            <label for="uClean">Clean Overall U (W/m²·K)</label>
+            <input type="number" id="uClean" value="550" step="any">
+          </div>
+
+          <div class="field">
+            <label for="uFouled">Expected Fouled U (W/m²·K)</label>
+            <input type="number" id="uFouled" value="420" step="any">
+          </div>
+
+          <div class="field">
+            <label for="correctionFactor">LMTD Correction Factor F</label>
+            <input type="number" id="correctionFactor" value="1.0" step="any">
+            <small>Use 1.0 for simple screening if unknown</small>
+          </div>
+
+          <div class="field">
+            <label for="installedArea">Installed Exchanger Area (m²)</label>
+            <input type="number" id="installedArea" value="25" step="any">
+            <small>Optional but very useful for underperformance check</small>
+          </div>
+
+          <div class="field">
+            <label for="energyCost">Energy Value / Utility Cost ($/MWh)</label>
+            <input type="number" id="energyCost" value="45" step="any">
+          </div>
+
+          <div class="field">
+            <label for="operatingHours">Operating Hours per Year</label>
+            <input type="number" id="operatingHours" value="8000" step="any">
+          </div>
+
+          <div class="field full-width">
+            <label for="notes">Optional Internal Notes</label>
+            <input type="text" id="notes" placeholder="Tag, service, or exchanger note">
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" onclick="calculateHX()">Calculate</button>
+          <button type="button" class="btn-secondary" onclick="resetHXCalculator()">Reset</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Results</h3>
+
+        <div class="results-grid">
+          <div class="result-box">
+            <div class="label">Duty from Hot Side</div>
+            <div class="value" id="qHotResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Duty from Cold Side</div>
+            <div class="value" id="qColdResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Screening Duty</div>
+            <div class="value" id="qScreenResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Duty Mismatch</div>
+            <div class="value" id="mismatchResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">ΔT1</div>
+            <div class="value" id="dt1Result">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">ΔT2</div>
+            <div class="value" id="dt2Result">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">LMTD</div>
+            <div class="value" id="lmtdResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Corrected Mean ΔT</div>
+            <div class="value" id="correctedDtResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Required Clean Area</div>
+            <div class="value" id="cleanAreaResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Required Fouled Area</div>
+            <div class="value" id="fouledAreaResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Installed Area Utilization</div>
+            <div class="value" id="utilizationResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Potential Thermal Loss Value</div>
+            <div class="value" id="lossValueResult">-</div>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <h3 style="margin-top:1.5rem;">Temperature Profile Visualization</h3>
+          <div class="chart-box">
+            <canvas id="hxCanvas" width="520" height="320"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Engineering Interpretation</h2>
+    <div class="card">
+      <ul class="message-list" id="interpretationList">
+        <li>Enter your data and click <strong>Calculate</strong>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h3>Need a deeper review?</h3>
+      <p>
+        If the exchanger appears thermally constrained, fouled, or short on area, that can mean lost
+        recovery, higher utility consumption, and hidden production inefficiency.
+      </p>
+      <p>
+        Alatau Tech Consulting supports exchanger performance review, thermal bottleneck analysis,
+        process optimization, and practical OPEX reduction studies.
+      </p>
+      <p style="margin-bottom:0;">
+        <a href="index.html#contact" style="color:#003366; font-weight:700; text-decoration:none;">Go to Contact Page</a>
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div style="font-size: 0.95rem;">
+      &copy; 2025 Alatau Tech Consulting. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    function fmt(value, decimals = 2) {
+      if (!isFinite(value)) return "-";
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function flowToKgS(value, unit) {
+      if (unit === "kgh") return value / 3600;
+      return value;
+    }
+
+    function calculateLMTD(dt1, dt2) {
+      if (dt1 <= 0 || dt2 <= 0) return NaN;
+      if (Math.abs(dt1 - dt2) < 1e-9) return dt1;
+      return (dt1 - dt2) / Math.log(dt1 / dt2);
+    }
+
+    function drawHXChart(hotIn, hotOut, coldIn, coldOut) {
+      const canvas = document.getElementById("hxCanvas");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const margin = { top: 25, right: 25, bottom: 45, left: 60 };
+      const plotW = w - margin.left - margin.right;
+      const plotH = h - margin.top - margin.bottom;
+
+      const tMin = Math.min(hotIn, hotOut, coldIn, coldOut) - 10;
+      const tMax = Math.max(hotIn, hotOut, coldIn, coldOut) + 10;
+      const safeSpan = Math.max(1, tMax - tMin);
+
+      function xScale(x) {
+        return margin.left + x * plotW;
+      }
+
+      function yScale(temp) {
+        return margin.top + plotH - ((temp - tMin) / safeSpan) * plotH;
+      }
+
+      ctx.strokeStyle = "#003366";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, margin.top);
+      ctx.lineTo(margin.left, margin.top + plotH);
+      ctx.lineTo(margin.left + plotW, margin.top + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = "#333";
+      ctx.font = "12px Poppins";
+      ctx.fillText("Exchanger length (relative)", margin.left + plotW / 2 - 55, h - 12);
+
+      ctx.save();
+      ctx.translate(18, margin.top + plotH / 2 + 20);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("Temperature (°C)", 0, 0);
+      ctx.restore();
+
+      // Hot line
+      ctx.strokeStyle = "#a00000";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(xScale(0), yScale(hotIn));
+      ctx.lineTo(xScale(1), yScale(hotOut));
+      ctx.stroke();
+
+      // Cold line
+      ctx.strokeStyle = "#0b6b2f";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(xScale(0), yScale(coldIn));
+      ctx.lineTo(xScale(1), yScale(coldOut));
+      ctx.stroke();
+
+      ctx.fillStyle = "#a00000";
+      ctx.font = "12px Poppins";
+      ctx.fillText("Hot stream", xScale(0.02), yScale(hotIn) - 8);
+
+      ctx.fillStyle = "#0b6b2f";
+      ctx.fillText("Cold stream", xScale(0.02), yScale(coldIn) + 18);
+
+      ctx.fillStyle = "#555";
+      ctx.font = "11px Poppins";
+      [hotIn, hotOut, coldIn, coldOut].forEach((t) => {
+        const y = yScale(t);
+        ctx.beginPath();
+        ctx.moveTo(margin.left - 4, y);
+        ctx.lineTo(margin.left, y);
+        ctx.strokeStyle = "#003366";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillText(fmt(t, 0), margin.left - 38, y + 4);
+      });
+
+      ctx.fillStyle = "#333";
+      ctx.fillText("Inlet", xScale(0) - 10, margin.top + plotH + 18);
+      ctx.fillText("Outlet", xScale(1) - 16, margin.top + plotH + 18);
+    }
+
+    function calculateHX() {
+      const flowHot = parseFloat(document.getElementById("flowHot").value);
+      const flowHotUnit = document.getElementById("flowHotUnit").value;
+      const cpHot = parseFloat(document.getElementById("cpHot").value);
+      const hotIn = parseFloat(document.getElementById("hotIn").value);
+      const hotOut = parseFloat(document.getElementById("hotOut").value);
+
+      const flowCold = parseFloat(document.getElementById("flowCold").value);
+      const flowColdUnit = document.getElementById("flowColdUnit").value;
+      const cpCold = parseFloat(document.getElementById("cpCold").value);
+      const coldIn = parseFloat(document.getElementById("coldIn").value);
+      const coldOut = parseFloat(document.getElementById("coldOut").value);
+
+      const uClean = parseFloat(document.getElementById("uClean").value);
+      const uFouled = parseFloat(document.getElementById("uFouled").value);
+      const correctionFactor = parseFloat(document.getElementById("correctionFactor").value);
+      const installedArea = parseFloat(document.getElementById("installedArea").value);
+      const energyCost = parseFloat(document.getElementById("energyCost").value);
+      const operatingHours = parseFloat(document.getElementById("operatingHours").value);
+
+      if (
+        !isFinite(flowHot) || flowHot <= 0 ||
+        !isFinite(cpHot) || cpHot <= 0 ||
+        !isFinite(hotIn) ||
+        !isFinite(hotOut) ||
+        !isFinite(flowCold) || flowCold <= 0 ||
+        !isFinite(cpCold) || cpCold <= 0 ||
+        !isFinite(coldIn) ||
+        !isFinite(coldOut) ||
+        !isFinite(uClean) || uClean <= 0 ||
+        !isFinite(uFouled) || uFouled <= 0 ||
+        !isFinite(correctionFactor) || correctionFactor <= 0 || correctionFactor > 1.2 ||
+        !isFinite(installedArea) || installedArea <= 0 ||
+        !isFinite(energyCost) || energyCost < 0 ||
+        !isFinite(operatingHours) || operatingHours < 0
+      ) {
+        alert("Please enter valid positive values.");
+        return;
+      }
+
+      if (!(hotIn > hotOut) || !(coldOut > coldIn)) {
+        alert("For this version, the hot stream must cool down and the cold stream must heat up.");
+        return;
+      }
+
+      const mHot = flowToKgS(flowHot, flowHotUnit);
+      const mCold = flowToKgS(flowCold, flowColdUnit);
+
+      const qHotKW = mHot * cpHot * (hotIn - hotOut);
+      const qColdKW = mCold * cpCold * (coldOut - coldIn);
+      const qScreenKW = (qHotKW + qColdKW) / 2;
+
+      const mismatchPct = Math.abs(qHotKW - qColdKW) / Math.max(qHotKW, qColdKW) * 100;
+
+      // Counter-current screening
+      const dt1 = hotIn - coldOut;
+      const dt2 = hotOut - coldIn;
+      const lmtd = calculateLMTD(dt1, dt2);
+      const correctedDT = lmtd * correctionFactor;
+
+      if (!isFinite(lmtd) || lmtd <= 0 || !isFinite(correctedDT) || correctedDT <= 0) {
+        alert("Invalid temperature approach for LMTD. Check the terminal temperatures.");
+        return;
+      }
+
+      const qW = qScreenKW * 1000;
+      const cleanArea = qW / (uClean * correctedDT);
+      const fouledArea = qW / (uFouled * correctedDT);
+
+      const areaUtilization = (fouledArea / installedArea) * 100;
+
+      let thermalLossKW = 0;
+      if (installedArea < fouledArea) {
+        const achievableQw = installedArea * uFouled * correctedDT;
+        thermalLossKW = Math.max(0, (qW - achievableQw) / 1000);
+      }
+
+      const lossValueYear = (thermalLossKW / 1000) * operatingHours * energyCost;
+
+      document.getElementById("qHotResult").textContent = fmt(qHotKW, 1) + " kW";
+      document.getElementById("qColdResult").textContent = fmt(qColdKW, 1) + " kW";
+      document.getElementById("qScreenResult").textContent = fmt(qScreenKW, 1) + " kW";
+      document.getElementById("mismatchResult").textContent = fmt(mismatchPct, 1) + "%";
+      document.getElementById("dt1Result").textContent = fmt(dt1, 1) + " °C";
+      document.getElementById("dt2Result").textContent = fmt(dt2, 1) + " °C";
+      document.getElementById("lmtdResult").textContent = fmt(lmtd, 1) + " °C";
+      document.getElementById("correctedDtResult").textContent = fmt(correctedDT, 1) + " °C";
+      document.getElementById("cleanAreaResult").textContent = fmt(cleanArea, 2) + " m²";
+      document.getElementById("fouledAreaResult").textContent = fmt(fouledArea, 2) + " m²";
+      document.getElementById("utilizationResult").textContent = fmt(areaUtilization, 1) + "%";
+      document.getElementById("lossValueResult").textContent = "$" + fmt(lossValueYear, 0) + "/yr";
+
+      const messages = [];
+
+      if (mismatchPct > 15) {
+        messages.push(`<li><span class="bad">Large duty mismatch:</span> The hot-side and cold-side duty estimates differ by ${fmt(mismatchPct, 1)}%. This suggests inconsistent stream data, heat loss, wrong Cp assumptions, or measurement uncertainty.</li>`);
+      } else if (mismatchPct > 5) {
+        messages.push(`<li><span class="warning">Moderate duty mismatch:</span> The two duty estimates are not fully aligned. This is common in field data, but the numbers should be checked before making strong decisions.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Reasonable thermal balance:</span> The hot-side and cold-side duty estimates are broadly consistent for a screening calculation.</li>`);
+      }
+
+      if (dt1 < 10 || dt2 < 10) {
+        messages.push(`<li><span class="warning">Tight terminal approach:</span> One of the terminal temperature approaches is small. This reduces LMTD and can make the exchanger area-sensitive and harder to operate.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Terminal approaches look workable:</span> The exchanger is not showing an extremely tight end approach in this screening case.</li>`);
+      }
+
+      if (areaUtilization > 100) {
+        messages.push(`<li><span class="bad">Installed area likely insufficient under fouled conditions:</span> Required fouled area exceeds installed area. The exchanger may struggle to meet duty once fouling develops.</li>`);
+      } else if (areaUtilization > 85) {
+        messages.push(`<li><span class="warning">Limited fouled area margin:</span> The exchanger appears to use most of its installed area under fouled conditions. Performance could degrade noticeably as fouling increases.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Fouled area margin looks acceptable:</span> Installed area appears adequate for this screening case even after accounting for a reduced U value.</li>`);
+      }
+
+      const uDropPct = ((uClean - uFouled) / uClean) * 100;
+      if (uDropPct > 25) {
+        messages.push(`<li><span class="warning">Meaningful fouling impact assumed:</span> The drop from clean U to fouled U is about ${fmt(uDropPct, 1)}%. This indicates notable thermal degradation risk and supports routine fouling review.</li>`);
+      } else {
+        messages.push(`<li><span class="good">Moderate fouling allowance:</span> The assumed clean-to-fouled U reduction is not extreme for a screening case.</li>`);
+      }
+
+      if (lossValueYear > 25000) {
+        messages.push(`<li><span class="bad">High potential value loss:</span> The estimated thermal shortfall could be worth around <strong>$${fmt(lossValueYear, 0)}/year</strong>. This exchanger is a strong candidate for performance review or cleaning strategy optimization.</li>`);
+      } else if (lossValueYear > 5000) {
+        messages.push(`<li><span class="warning">Noticeable thermal loss value:</span> The implied utility or recovery penalty is material enough to justify a closer look.</li>`);
+      } else {
+        messages.push(`<li><span class="good">No large shortfall value visible:</span> This screening case does not suggest a major monetary loss from missing exchanger duty.</li>`);
+      }
+
+      if (installedArea < fouledArea || mismatchPct > 10 || uDropPct > 20) {
+        messages.push(`<li><strong>Engineering insight:</strong> This case suggests that fouling, insufficient area, or inconsistent process data may be limiting thermal performance. The next checks should usually include exchanger cleanliness, temperature measurement confidence, correction factor realism, and whether utility conditions have drifted from design.</li>`);
+      } else {
+        messages.push(`<li><strong>Engineering insight:</strong> This exchanger looks reasonably balanced for a first-pass calculation, though a full review should still confirm correction factor, phase behavior, pressure drop, and actual operating history.</li>`);
+      }
+
+      document.getElementById("interpretationList").innerHTML = messages.join("");
+      drawHXChart(hotIn, hotOut, coldIn, coldOut);
+    }
+
+    function resetHXCalculator() {
+      document.getElementById("flowHot").value = 50;
+      document.getElementById("flowHotUnit").value = "kgh";
+      document.getElementById("cpHot").value = 2.1;
+      document.getElementById("hotIn").value = 180;
+      document.getElementById("hotOut").value = 120;
+
+      document.getElementById("flowCold").value = 80;
+      document.getElementById("flowColdUnit").value = "kgh";
+      document.getElementById("cpCold").value = 4.0;
+      document.getElementById("coldIn").value = 40;
+      document.getElementById("coldOut").value = 70;
+
+      document.getElementById("uClean").value = 550;
+      document.getElementById("uFouled").value = 420;
+      document.getElementById("correctionFactor").value = 1.0;
+      document.getElementById("installedArea").value = 25;
+      document.getElementById("energyCost").value = 45;
+      document.getElementById("operatingHours").value = 8000;
+      document.getElementById("notes").value = "";
+
+      const outputIds = [
+        "qHotResult",
+        "qColdResult",
+        "qScreenResult",
+        "mismatchResult",
+        "dt1Result",
+        "dt2Result",
+        "lmtdResult",
+        "correctedDtResult",
+        "cleanAreaResult",
+        "fouledAreaResult",
+        "utilizationResult",
+        "lossValueResult"
+      ];
+
+      outputIds.forEach(id => {
+        document.getElementById(id).textContent = "-";
+      });
+
+      document.getElementById("interpretationList").innerHTML =
+        "<li>Enter your data and click <strong>Calculate</strong>.</li>";
+
+      const canvas = document.getElementById("hxCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      calculateHX();
+    }
+
+    calculateHX();
+  </script>
+</body>
+</html>
