@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Basic SEO -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PID Tuning Calculator | Alatau Tech Consulting</title>
-  <meta name="description" content="Estimate PID tuning parameters using Ziegler–Nichols and Cohen–Coon methods, simulate step response, and screen loop stability risk for industrial control loops.">
-  <meta name="keywords" content="PID tuning calculator, Ziegler Nichols, Cohen Coon, step response, process control, controller tuning, loop performance">
+  <meta name="description" content="Estimate PID tuning parameters using IMC (Lambda), Ziegler–Nichols, and Cohen–Coon methods, simulate step response, and screen loop stability risk for industrial control loops.">
+  <meta name="keywords" content="PID tuning calculator, IMC tuning, Lambda tuning, Ziegler Nichols, Cohen Coon, step response, process control, controller tuning, loop performance">
   <meta name="author" content="Alatau Tech Consulting">
   <link rel="canonical" href="https://alatau.tech/pid-tuning-calculator.html">
 
@@ -276,6 +275,11 @@
       color: #003366;
     }
 
+    .recommended-row td {
+      background: #eef7ff;
+      font-weight: 600;
+    }
+
     footer {
       background: #003366;
       color: #fff;
@@ -310,7 +314,7 @@
     "@type": "WebPage",
     "name": "PID Tuning Calculator",
     "url": "https://alatau.tech/pid-tuning-calculator.html",
-    "description": "Estimate PID parameters using Ziegler–Nichols and Cohen–Coon, simulate step response, and screen loop stability risk.",
+    "description": "Estimate PID parameters using IMC (Lambda), Ziegler–Nichols, and Cohen–Coon, simulate step response, and screen loop stability risk.",
     "publisher": {
       "@type": "Organization",
       "name": "Alatau Tech Consulting",
@@ -347,7 +351,7 @@
     <div class="hero-text">
       <h1>PID Tuning Calculator</h1>
       <p>
-        Estimate controller settings using Ziegler–Nichols and Cohen–Coon methods,
+        Estimate controller settings using IMC (Lambda), Ziegler–Nichols, and Cohen–Coon methods,
         visualize a simulated step response, and screen for oscillation or sluggishness risk
         in industrial loops.
       </p>
@@ -357,7 +361,8 @@
   <section>
     <div class="note">
       <strong>Scope of this version:</strong> first-order-plus-dead-time style screening tool for
-      practical loop assessment. This is intended for fast engineering checks, not a replacement for
+      practical loop assessment. IMC (Lambda) is set as the default because it is usually a more robust
+      starting point for self-regulating loops. This is intended for fast engineering checks, not a replacement for
       plant testing, APC studies, safety validation, or vendor-specific controller implementation details.
     </div>
   </section>
@@ -373,7 +378,8 @@
           <div class="field">
             <label for="tuningMethod">Preferred Tuning Method</label>
             <select id="tuningMethod">
-              <option value="zn-reaction" selected>Ziegler–Nichols (Reaction Curve)</option>
+              <option value="imc" selected>IMC / Lambda</option>
+              <option value="zn-reaction">Ziegler–Nichols (Reaction Curve)</option>
               <option value="cohen-coon">Cohen–Coon</option>
               <option value="zn-ultimate">Ziegler–Nichols (Ultimate Gain)</option>
             </select>
@@ -382,8 +388,8 @@
           <div class="field">
             <label for="controllerType">Controller Type</label>
             <select id="controllerType">
-              <option value="pid" selected>PID</option>
-              <option value="pi">PI</option>
+              <option value="pi" selected>PI</option>
+              <option value="pid">PID</option>
               <option value="p">P</option>
             </select>
           </div>
@@ -405,6 +411,12 @@
           </div>
 
           <div class="field">
+            <label for="lambdaFactor">IMC Lambda Factor λ/τ</label>
+            <input type="number" id="lambdaFactor" value="3" step="any">
+            <small>Typical robust range: 1 to 3. Higher = slower but safer.</small>
+          </div>
+
+          <div class="field">
             <label for="setpointStep">Setpoint Step Size</label>
             <input type="number" id="setpointStep" value="1" step="any">
           </div>
@@ -417,7 +429,7 @@
           <div class="field">
             <label for="aggressiveness">Aggressiveness Factor</label>
             <input type="number" id="aggressiveness" value="1" step="any">
-            <small>1.0 = base tuning, 0.8 = softer, 1.2 = stronger</small>
+            <small>Applies mainly to classical methods. 1.0 = base tuning.</small>
           </div>
 
           <div class="field">
@@ -471,6 +483,12 @@
             </tr>
           </thead>
           <tbody>
+            <tr class="recommended-row">
+              <td>IMC / Lambda</td>
+              <td id="imcKc">-</td>
+              <td id="imcTi">-</td>
+              <td id="imcTd">-</td>
+            </tr>
             <tr>
               <td>Ziegler–Nichols (Reaction)</td>
               <td id="znReactionKc">-</td>
@@ -604,6 +622,24 @@
       return Math.min(max, Math.max(min, value));
     }
 
+    function imcTuning(controllerType, Kp, tau, L, lambdaFactor) {
+      const lambda = Math.max(lambdaFactor * tau, 0.001);
+      let Kc = 0, Ti = null, Td = null;
+
+      if (controllerType === "p") {
+        Kc = tau / (Kp * (lambda + L));
+      } else if (controllerType === "pi") {
+        Kc = tau / (Kp * (lambda + L));
+        Ti = tau;
+      } else {
+        Kc = (tau + 0.5 * L) / (Kp * (lambda + 0.5 * L));
+        Ti = tau + 0.5 * L;
+        Td = (tau * L) / Math.max(2 * tau + L, 0.001);
+      }
+
+      return { Kc, Ti, Td };
+    }
+
     function znReactionTuning(controllerType, Kp, tau, L) {
       let Kc = 0, Ti = null, Td = null;
 
@@ -656,7 +692,11 @@
       return { Kc, Ti, Td };
     }
 
-    function applyAggressiveness(tuning, factor, controllerType) {
+    function applyAggressiveness(tuning, factor, controllerType, method) {
+      if (method === "imc") {
+        return tuning;
+      }
+
       return {
         Kc: tuning.Kc * factor,
         Ti: controllerType === "p" || tuning.Ti == null ? tuning.Ti : tuning.Ti / factor,
@@ -672,7 +712,6 @@
       const y = [];
       const sp = [];
       const u = [];
-      const eHist = [];
 
       let pv = 0;
       let integ = 0;
@@ -689,17 +728,13 @@
 
         let ctrl = Kc * err;
 
-        if (controllerType === "pi" || controllerType === "pid") {
-          if (Ti && Ti > 0) {
-            integ += (err * dt) / Ti;
-            ctrl += Kc * integ;
-          }
+        if ((controllerType === "pi" || controllerType === "pid") && Ti && Ti > 0) {
+          integ += (err * dt) / Ti;
+          ctrl += Kc * integ;
         }
 
-        if (controllerType === "pid") {
-          if (Td && Td > 0) {
-            ctrl += Kc * Td * derivative;
-          }
+        if (controllerType === "pid" && Td && Td > 0) {
+          ctrl += Kc * Td * derivative;
         }
 
         ctrl = clamp(ctrl, -100, 100);
@@ -707,8 +742,6 @@
         delayedU.push(ctrl);
         const effectiveU = delayedU.shift();
 
-        // FOPDT process approximation:
-        // dy/dt = (-y + Kp*u_delayed) / tau
         const dydt = (-pv + Kp * effectiveU) / tau;
         pv = pv + dydt * dt;
 
@@ -716,16 +749,14 @@
         y.push(pv);
         sp.push(setpoint);
         u.push(ctrl);
-        eHist.push(err);
 
         prevErr = err;
       }
 
-      return { t, y, sp, u, eHist };
+      return { t, y, sp, u };
     }
 
     function analyzeResponse(t, y, stepSize) {
-      const finalValue = y[y.length - 1];
       const target = stepSize;
       const safeTarget = Math.abs(target) < 1e-9 ? 1 : target;
 
@@ -735,7 +766,6 @@
 
       for (let i = 0; i < y.length; i++) {
         maxY = Math.max(maxY, y[i]);
-
         if (riseTime === null && y[i] >= 0.9 * target) {
           riseTime = t[i];
         }
@@ -759,13 +789,7 @@
       let overshoot = ((maxY - target) / Math.abs(safeTarget)) * 100;
       overshoot = Math.max(0, overshoot);
 
-      return {
-        finalValue,
-        maxY,
-        overshoot,
-        riseTime,
-        settlingTime
-      };
+      return { maxY, overshoot, riseTime, settlingTime };
     }
 
     function drawPIDChart(sim) {
@@ -793,7 +817,6 @@
         return margin.top + plotH - ((val - yMin) / safeSpan) * plotH;
       }
 
-      // axes
       ctx.strokeStyle = "#003366";
       ctx.lineWidth = 1.2;
       ctx.beginPath();
@@ -802,7 +825,6 @@
       ctx.lineTo(margin.left + plotW, margin.top + plotH);
       ctx.stroke();
 
-      // setpoint
       ctx.strokeStyle = "#0b6b2f";
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 5]);
@@ -815,7 +837,6 @@
       }
       ctx.stroke();
 
-      // response
       ctx.setLineDash([]);
       ctx.strokeStyle = "#003366";
       ctx.lineWidth = 2.5;
@@ -828,7 +849,6 @@
       }
       ctx.stroke();
 
-      // labels
       ctx.fillStyle = "#333";
       ctx.font = "12px Poppins";
       ctx.fillText("Time (s)", margin.left + plotW / 2 - 20, h - 12);
@@ -845,7 +865,6 @@
       ctx.fillStyle = "#0b6b2f";
       ctx.fillText("Setpoint", margin.left + 130, margin.top + 14);
 
-      // ticks
       ctx.fillStyle = "#555";
       ctx.font = "11px Poppins";
       for (let i = 0; i <= 5; i++) {
@@ -867,6 +886,7 @@
       const Kp = parseFloat(document.getElementById("processGain").value);
       const tau = parseFloat(document.getElementById("timeConstant").value);
       const L = parseFloat(document.getElementById("deadTime").value);
+      const lambdaFactor = parseFloat(document.getElementById("lambdaFactor").value);
       const stepSize = parseFloat(document.getElementById("setpointStep").value);
       const simTime = parseFloat(document.getElementById("simTime").value);
       const aggressiveness = parseFloat(document.getElementById("aggressiveness").value);
@@ -874,13 +894,13 @@
       const Pu = parseFloat(document.getElementById("ultimatePeriod").value);
       const existingKc = parseFloat(document.getElementById("existingKc").value);
       const existingTi = parseFloat(document.getElementById("existingTi").value);
-      const existingTd = parseFloat(document.getElementById("existingTd").value);
       const dt = parseFloat(document.getElementById("sampleTime").value);
 
       if (
         !isFinite(Kp) || Kp === 0 ||
         !isFinite(tau) || tau <= 0 ||
         !isFinite(L) || L < 0 ||
+        !isFinite(lambdaFactor) || lambdaFactor <= 0 ||
         !isFinite(stepSize) || stepSize === 0 ||
         !isFinite(simTime) || simTime <= 0 ||
         !isFinite(aggressiveness) || aggressiveness <= 0 ||
@@ -897,23 +917,21 @@
         }
       }
 
-      // All methods for comparison
-      const znReactionBase = znReactionTuning(controllerType, Kp, tau, Math.max(L, 0.001));
-      const ccBase = cohenCoonTuning(controllerType, Kp, tau, Math.max(L, 0.001));
+      const safeL = Math.max(L, 0.001);
+      const imcBase = imcTuning(controllerType, Kp, tau, L, lambdaFactor);
+      const znReactionBase = znReactionTuning(controllerType, Kp, tau, safeL);
+      const ccBase = cohenCoonTuning(controllerType, Kp, tau, safeL);
       const znUltimateBase = znUltimateTuning(controllerType, Math.max(Ku || 1, 0.001), Math.max(Pu || 1, 0.001));
 
-      const znReaction = applyAggressiveness(znReactionBase, aggressiveness, controllerType);
-      const cc = applyAggressiveness(ccBase, aggressiveness, controllerType);
-      const znUltimate = applyAggressiveness(znUltimateBase, aggressiveness, controllerType);
+      const imc = applyAggressiveness(imcBase, aggressiveness, controllerType, "imc");
+      const znReaction = applyAggressiveness(znReactionBase, aggressiveness, controllerType, "zn-reaction");
+      const cc = applyAggressiveness(ccBase, aggressiveness, controllerType, "cohen-coon");
+      const znUltimate = applyAggressiveness(znUltimateBase, aggressiveness, controllerType, "zn-ultimate");
 
-      let selected;
-      if (tuningMethod === "cohen-coon") {
-        selected = cc;
-      } else if (tuningMethod === "zn-ultimate") {
-        selected = znUltimate;
-      } else {
-        selected = znReaction;
-      }
+      let selected = imc;
+      if (tuningMethod === "cohen-coon") selected = cc;
+      else if (tuningMethod === "zn-ultimate") selected = znUltimate;
+      else if (tuningMethod === "zn-reaction") selected = znReaction;
 
       const sim = simulateClosedLoopFOPDT(
         Kp,
@@ -943,6 +961,10 @@
       let severity = "Moderate";
       if (severityIndex < 0.1) severity = "Soft";
       else if (severityIndex > 0.35) severity = "Strong";
+
+      document.getElementById("imcKc").textContent = fmt(imc.Kc, 3);
+      document.getElementById("imcTi").textContent = imc.Ti == null ? "-" : fmt(imc.Ti, 2);
+      document.getElementById("imcTd").textContent = imc.Td == null ? "-" : fmt(imc.Td, 2);
 
       document.getElementById("znReactionKc").textContent = fmt(znReaction.Kc, 3);
       document.getElementById("znReactionTi").textContent = znReaction.Ti == null ? "-" : fmt(znReaction.Ti, 2);
@@ -976,6 +998,16 @@
           : "N/A";
 
       const messages = [];
+
+      if (tuningMethod === "imc") {
+        if (lambdaFactor >= 3) {
+          messages.push(`<li><span class="good">Robust IMC choice:</span> Lambda is set relatively high. This usually gives a slower but safer response and is a good starting point for plant-facing tuning work.</li>`);
+        } else if (lambdaFactor >= 1) {
+          messages.push(`<li><span class="warning">Moderate IMC aggressiveness:</span> Lambda is in a reasonable engineering range, but the loop may become sharper and less forgiving than a high-lambda design.</li>`);
+        } else {
+          messages.push(`<li><span class="bad">Aggressive IMC setting:</span> Lambda is below the process time constant. This can reduce robustness, especially when the model is uncertain or dead time is significant.</li>`);
+        }
+      }
 
       if (L / tau > 0.5) {
         messages.push(`<li><span class="bad">Dead-time-dominant process:</span> The dead time is large relative to the time constant. This usually makes the loop harder to tune and more sensitive to aggressive settings.</li>`);
@@ -1020,7 +1052,9 @@
         messages.push(`<li><span class="good">Moderate tuning severity:</span> The selected settings sit in a middle range for this process model.</li>`);
       }
 
-      if (stability === "Oscillatory risk" || L / tau > 0.5 || analysis.overshoot > 25) {
+      if (tuningMethod === "imc") {
+        messages.push(`<li><strong>Engineering insight:</strong> IMC is usually the most defensible first-pass option when you want a loop that behaves predictably and tolerates model mismatch better than aggressive classical rules.</li>`);
+      } else if (stability === "Oscillatory risk" || L / tau > 0.5 || analysis.overshoot > 25) {
         messages.push(`<li><strong>Engineering insight:</strong> This loop may not be fixable by tuning alone. Check valve stiction, measurement filtering, dead time sources, and whether the process itself has too much delay for the chosen control objective.</li>`);
       } else {
         messages.push(`<li><strong>Engineering insight:</strong> This looks like a workable first-pass tuning set. Final settings should still be validated against real plant behavior, controller form, output limits, anti-reset windup, and upset conditions.</li>`);
@@ -1031,11 +1065,12 @@
     }
 
     function resetPIDCalculator() {
-      document.getElementById("tuningMethod").value = "zn-reaction";
-      document.getElementById("controllerType").value = "pid";
+      document.getElementById("tuningMethod").value = "imc";
+      document.getElementById("controllerType").value = "pi";
       document.getElementById("processGain").value = "1.2";
       document.getElementById("timeConstant").value = "45";
       document.getElementById("deadTime").value = "10";
+      document.getElementById("lambdaFactor").value = "3";
       document.getElementById("setpointStep").value = "1";
       document.getElementById("simTime").value = "240";
       document.getElementById("aggressiveness").value = "1";
@@ -1048,6 +1083,7 @@
       document.getElementById("loopNotes").value = "";
 
       const outputIds = [
+        "imcKc", "imcTi", "imcTd",
         "znReactionKc", "znReactionTi", "znReactionTd",
         "ccKc", "ccTi", "ccTd",
         "znUltimateKc", "znUltimateTi", "znUltimateTd",
