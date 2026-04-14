@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <!-- Basic SEO -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Heat Exchanger Duty & LMTD Calculator | Alatau Tech Consulting</title>
-  <meta name="description" content="Estimate heat exchanger duty, LMTD, required area, fouling impact, and thermal underperformance risk for industrial services.">
-  <meta name="keywords" content="heat exchanger calculator, LMTD calculator, exchanger duty, required area, fouling factor, shell and tube, process engineering">
+  <meta name="description"
+    content="Estimate heat exchanger duty, LMTD, required area, fouling impact, and thermal underperformance risk for industrial services.">
+  <meta name="keywords"
+    content="heat exchanger calculator, LMTD calculator, exchanger duty, required area, fouling factor, shell and tube, process engineering">
   <meta name="author" content="Alatau Tech Consulting">
   <link rel="canonical" href="https://alatau.tech/heat-exchanger-lmtd-calculator.html">
 
@@ -110,7 +113,7 @@
       background: #fff;
       padding: 1.5rem;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     }
 
     .card h3 {
@@ -300,6 +303,7 @@
   }
   </script>
 </head>
+
 <body>
 
   <div class="language-bar">
@@ -424,6 +428,17 @@
           </div>
 
           <div class="field">
+            <label for="serviceType">Service Type</label>
+            <select id="serviceType">
+              <option value="single_phase" selected>Single-phase sensible heat only</option>
+              <option value="condensing">Condensing service (not supported here)</option>
+              <option value="boiling">Boiling / vaporizing service (not supported here)</option>
+              <option value="mixed">Mixed / unknown (not supported here)</option>
+            </select>
+            <small>This calculator only supports single-phase sensible heat screening.</small>
+          </div>
+
+          <div class="field">
             <label for="installedArea">Installed Exchanger Area (m²)</label>
             <input type="number" id="installedArea" value="25" step="any">
             <small>Optional but very useful for underperformance check</small>
@@ -511,7 +526,7 @@
           </div>
 
           <div class="result-box">
-            <div class="label">Potential Thermal Loss Value</div>
+            <div class="label">Estimated Utility-Equivalent Penalty</div>
             <div class="value" id="lossValueResult">-</div>
           </div>
         </div>
@@ -547,7 +562,8 @@
         process optimization, and practical OPEX reduction studies.
       </p>
       <p style="margin-bottom:0;">
-        <a href="index.html#contact" style="color:#003366; font-weight:700; text-decoration:none;">Go to Contact Page</a>
+        <a href="index.html#contact" style="color:#003366; font-weight:700; text-decoration:none;">Go to Contact
+          Page</a>
       </p>
     </div>
   </section>
@@ -620,7 +636,7 @@
       ctx.fillText("Temperature (°C)", 0, 0);
       ctx.restore();
 
-      // Hot line
+      // Hot stream line
       ctx.strokeStyle = "#a00000";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -628,7 +644,7 @@
       ctx.lineTo(xScale(1), yScale(hotOut));
       ctx.stroke();
 
-      // Cold line
+      // Cold stream line
       ctx.strokeStyle = "#0b6b2f";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -661,6 +677,10 @@
       ctx.fillText("Outlet", xScale(1) - 16, margin.top + plotH + 18);
     }
 
+    function setResult(id, text) {
+      document.getElementById(id).textContent = text;
+    }
+
     function calculateHX() {
       const flowHot = parseFloat(document.getElementById("flowHot").value);
       const flowHotUnit = document.getElementById("flowHotUnit").value;
@@ -677,7 +697,11 @@
       const uClean = parseFloat(document.getElementById("uClean").value);
       const uFouled = parseFloat(document.getElementById("uFouled").value);
       const correctionFactor = parseFloat(document.getElementById("correctionFactor").value);
-      const installedArea = parseFloat(document.getElementById("installedArea").value);
+      const serviceType = document.getElementById("serviceType").value;
+
+      const installedAreaRaw = document.getElementById("installedArea").value.trim();
+      const installedArea = installedAreaRaw === "" ? null : parseFloat(installedAreaRaw);
+
       const energyCost = parseFloat(document.getElementById("energyCost").value);
       const operatingHours = parseFloat(document.getElementById("operatingHours").value);
 
@@ -692,17 +716,36 @@
         !isFinite(coldOut) ||
         !isFinite(uClean) || uClean <= 0 ||
         !isFinite(uFouled) || uFouled <= 0 ||
-        !isFinite(correctionFactor) || correctionFactor <= 0 || correctionFactor > 1.2 ||
-        !isFinite(installedArea) || installedArea <= 0 ||
+        !isFinite(correctionFactor) || correctionFactor <= 0 || correctionFactor > 1.0 ||
         !isFinite(energyCost) || energyCost < 0 ||
         !isFinite(operatingHours) || operatingHours < 0
       ) {
-        alert("Please enter valid positive values.");
+        alert("Please enter valid values. F must be > 0 and <= 1.0.");
         return;
       }
 
-      if (!(hotIn > hotOut) || !(coldOut > coldIn)) {
-        alert("For this version, the hot stream must cool down and the cold stream must heat up.");
+      if (installedArea !== null && (!isFinite(installedArea) || installedArea <= 0)) {
+        alert("Installed area must be positive if provided.");
+        return;
+      }
+
+      if (serviceType !== "single_phase") {
+        alert("This calculator version supports only single-phase sensible heat service.");
+        return;
+      }
+
+      if (!(hotIn > hotOut)) {
+        alert("Hot stream must cool down in this calculator.");
+        return;
+      }
+
+      if (!(coldOut > coldIn)) {
+        alert("Cold stream must heat up in this calculator.");
+        return;
+      }
+
+      if (!(hotIn > coldIn)) {
+        alert("Hot inlet temperature must be above cold inlet temperature.");
         return;
       }
 
@@ -711,92 +754,134 @@
 
       const qHotKW = mHot * cpHot * (hotIn - hotOut);
       const qColdKW = mCold * cpCold * (coldOut - coldIn);
-      const qScreenKW = (qHotKW + qColdKW) / 2;
+
+      if (qHotKW <= 0 || qColdKW <= 0) {
+        alert("Calculated duties must be positive. Check inputs.");
+        return;
+      }
 
       const mismatchPct = Math.abs(qHotKW - qColdKW) / Math.max(qHotKW, qColdKW) * 100;
 
-      // Counter-current screening
+      // Counter-current screening only
       const dt1 = hotIn - coldOut;
       const dt2 = hotOut - coldIn;
+
+      if (dt1 <= 0 || dt2 <= 0) {
+        alert("Invalid counter-current terminal temperature differences. Check approach temperatures.");
+        return;
+      }
+
       const lmtd = calculateLMTD(dt1, dt2);
       const correctedDT = lmtd * correctionFactor;
 
       if (!isFinite(lmtd) || lmtd <= 0 || !isFinite(correctedDT) || correctedDT <= 0) {
-        alert("Invalid temperature approach for LMTD. Check the terminal temperatures.");
+        alert("Invalid LMTD result. Check temperatures and correction factor.");
         return;
       }
 
+      // Only use average duty when mismatch is not too large
+      if (mismatchPct > 10) {
+        setResult("qHotResult", fmt(qHotKW, 1) + " kW");
+        setResult("qColdResult", fmt(qColdKW, 1) + " kW");
+        setResult("qScreenResult", "Blocked");
+        setResult("mismatchResult", fmt(mismatchPct, 1) + "%");
+        setResult("dt1Result", fmt(dt1, 1) + " °C");
+        setResult("dt2Result", fmt(dt2, 1) + " °C");
+        setResult("lmtdResult", fmt(lmtd, 1) + " °C");
+        setResult("correctedDtResult", fmt(correctedDT, 1) + " °C");
+        setResult("cleanAreaResult", "Blocked");
+        setResult("fouledAreaResult", "Blocked");
+        setResult("utilizationResult", "-");
+        setResult("lossValueResult", "-");
+
+        document.getElementById("interpretationList").innerHTML = `
+        <li><span class="bad">Duty mismatch too large:</span> Hot-side and cold-side duties differ by ${fmt(mismatchPct, 1)}%.</li>
+        <li>Area-based conclusions are blocked until flow, Cp, and temperature data are reconciled.</li>
+        <li>This avoids false confidence from averaging inconsistent data.</li>
+      `;
+
+        drawHXChart(hotIn, hotOut, coldIn, coldOut);
+        return;
+      }
+
+      const qScreenKW = (qHotKW + qColdKW) / 2;
       const qW = qScreenKW * 1000;
+
       const cleanArea = qW / (uClean * correctedDT);
       const fouledArea = qW / (uFouled * correctedDT);
 
-      const areaUtilization = (fouledArea / installedArea) * 100;
-
+      let areaUtilizationText = "-";
+      let penaltyText = "-";
+      let areaUtilization = null;
+      let achievableQkW = null;
       let thermalLossKW = 0;
-      if (installedArea < fouledArea) {
-        const achievableQw = installedArea * uFouled * correctedDT;
-        thermalLossKW = Math.max(0, (qW - achievableQw) / 1000);
+      let lossValueYear = 0;
+
+      if (installedArea !== null) {
+        areaUtilization = (fouledArea / installedArea) * 100;
+        achievableQkW = (installedArea * uFouled * correctedDT) / 1000;
+        thermalLossKW = Math.max(0, qScreenKW - achievableQkW);
+        lossValueYear = (thermalLossKW / 1000) * operatingHours * energyCost;
+
+        areaUtilizationText = fmt(areaUtilization, 1) + "%";
+        penaltyText = "$" + fmt(lossValueYear, 0) + "/yr";
       }
 
-      const lossValueYear = (thermalLossKW / 1000) * operatingHours * energyCost;
-
-      document.getElementById("qHotResult").textContent = fmt(qHotKW, 1) + " kW";
-      document.getElementById("qColdResult").textContent = fmt(qColdKW, 1) + " kW";
-      document.getElementById("qScreenResult").textContent = fmt(qScreenKW, 1) + " kW";
-      document.getElementById("mismatchResult").textContent = fmt(mismatchPct, 1) + "%";
-      document.getElementById("dt1Result").textContent = fmt(dt1, 1) + " °C";
-      document.getElementById("dt2Result").textContent = fmt(dt2, 1) + " °C";
-      document.getElementById("lmtdResult").textContent = fmt(lmtd, 1) + " °C";
-      document.getElementById("correctedDtResult").textContent = fmt(correctedDT, 1) + " °C";
-      document.getElementById("cleanAreaResult").textContent = fmt(cleanArea, 2) + " m²";
-      document.getElementById("fouledAreaResult").textContent = fmt(fouledArea, 2) + " m²";
-      document.getElementById("utilizationResult").textContent = fmt(areaUtilization, 1) + "%";
-      document.getElementById("lossValueResult").textContent = "$" + fmt(lossValueYear, 0) + "/yr";
+      setResult("qHotResult", fmt(qHotKW, 1) + " kW");
+      setResult("qColdResult", fmt(qColdKW, 1) + " kW");
+      setResult("qScreenResult", fmt(qScreenKW, 1) + " kW");
+      setResult("mismatchResult", fmt(mismatchPct, 1) + "%");
+      setResult("dt1Result", fmt(dt1, 1) + " °C");
+      setResult("dt2Result", fmt(dt2, 1) + " °C");
+      setResult("lmtdResult", fmt(lmtd, 1) + " °C");
+      setResult("correctedDtResult", fmt(correctedDT, 1) + " °C");
+      setResult("cleanAreaResult", fmt(cleanArea, 2) + " m²");
+      setResult("fouledAreaResult", fmt(fouledArea, 2) + " m²");
+      setResult("utilizationResult", areaUtilizationText);
+      setResult("lossValueResult", penaltyText);
 
       const messages = [];
 
-      if (mismatchPct > 15) {
-        messages.push(`<li><span class="bad">Large duty mismatch:</span> The hot-side and cold-side duty estimates differ by ${fmt(mismatchPct, 1)}%. This suggests inconsistent stream data, heat loss, wrong Cp assumptions, or measurement uncertainty.</li>`);
-      } else if (mismatchPct > 5) {
-        messages.push(`<li><span class="warning">Moderate duty mismatch:</span> The two duty estimates are not fully aligned. This is common in field data, but the numbers should be checked before making strong decisions.</li>`);
+      if (mismatchPct > 5) {
+        messages.push(`<li><span class="warning">Moderate duty mismatch:</span> Hot-side and cold-side duties differ by ${fmt(mismatchPct, 1)}%. Results are still shown, but data quality should be checked.</li>`);
       } else {
-        messages.push(`<li><span class="good">Reasonable thermal balance:</span> The hot-side and cold-side duty estimates are broadly consistent for a screening calculation.</li>`);
+        messages.push(`<li><span class="good">Thermal balance is reasonable:</span> Hot-side and cold-side duties are broadly consistent for screening use.</li>`);
       }
 
       if (dt1 < 10 || dt2 < 10) {
-        messages.push(`<li><span class="warning">Tight terminal approach:</span> One of the terminal temperature approaches is small. This reduces LMTD and can make the exchanger area-sensitive and harder to operate.</li>`);
+        messages.push(`<li><span class="warning">Tight terminal approach:</span> One terminal temperature difference is small. Area sensitivity is high.</li>`);
       } else {
-        messages.push(`<li><span class="good">Terminal approaches look workable:</span> The exchanger is not showing an extremely tight end approach in this screening case.</li>`);
-      }
-
-      if (areaUtilization > 100) {
-        messages.push(`<li><span class="bad">Installed area likely insufficient under fouled conditions:</span> Required fouled area exceeds installed area. The exchanger may struggle to meet duty once fouling develops.</li>`);
-      } else if (areaUtilization > 85) {
-        messages.push(`<li><span class="warning">Limited fouled area margin:</span> The exchanger appears to use most of its installed area under fouled conditions. Performance could degrade noticeably as fouling increases.</li>`);
-      } else {
-        messages.push(`<li><span class="good">Fouled area margin looks acceptable:</span> Installed area appears adequate for this screening case even after accounting for a reduced U value.</li>`);
+        messages.push(`<li><span class="good">Terminal approaches are not unusually tight:</span> Counter-current screening looks workable.</li>`);
       }
 
       const uDropPct = ((uClean - uFouled) / uClean) * 100;
       if (uDropPct > 25) {
-        messages.push(`<li><span class="warning">Meaningful fouling impact assumed:</span> The drop from clean U to fouled U is about ${fmt(uDropPct, 1)}%. This indicates notable thermal degradation risk and supports routine fouling review.</li>`);
+        messages.push(`<li><span class="warning">Large assumed U degradation:</span> Clean-to-fouled U drops by about ${fmt(uDropPct, 1)}%.</li>`);
       } else {
-        messages.push(`<li><span class="good">Moderate fouling allowance:</span> The assumed clean-to-fouled U reduction is not extreme for a screening case.</li>`);
+        messages.push(`<li><span class="good">Fouling allowance is moderate:</span> The assumed U reduction is not extreme.</li>`);
       }
 
-      if (lossValueYear > 25000) {
-        messages.push(`<li><span class="bad">High potential value loss:</span> The estimated thermal shortfall could be worth around <strong>$${fmt(lossValueYear, 0)}/year</strong>. This exchanger is a strong candidate for performance review or cleaning strategy optimization.</li>`);
-      } else if (lossValueYear > 5000) {
-        messages.push(`<li><span class="warning">Noticeable thermal loss value:</span> The implied utility or recovery penalty is material enough to justify a closer look.</li>`);
+      if (installedArea !== null) {
+        messages.push(`<li><strong>Installed-area check:</strong> Achievable duty at installed area and fouled U is about <strong>${fmt(achievableQkW, 1)} kW</strong>.</li>`);
+
+        if (areaUtilization > 100) {
+          messages.push(`<li><span class="bad">Installed area likely insufficient:</span> Required fouled area exceeds installed area.</li>`);
+        } else if (areaUtilization > 85) {
+          messages.push(`<li><span class="warning">Limited fouled margin:</span> Installed area is close to the required fouled area.</li>`);
+        } else {
+          messages.push(`<li><span class="good">Installed area appears adequate:</span> There is visible margin under the fouled-U assumption.</li>`);
+        }
+
+        if (thermalLossKW > 0) {
+          messages.push(`<li><strong>Estimated utility-equivalent penalty:</strong> About <strong>$${fmt(lossValueYear, 0)}/year</strong>, based only on entered utility value and operating hours.</li>`);
+        } else {
+          messages.push(`<li><span class="good">No thermal shortfall at installed area:</span> Based on the entered fouled U and installed area, the exchanger is not short of duty.</li>`);
+        }
       } else {
-        messages.push(`<li><span class="good">No large shortfall value visible:</span> This screening case does not suggest a major monetary loss from missing exchanger duty.</li>`);
+        messages.push(`<li><strong>Installed-area check not performed:</strong> Add installed area to assess utilization, achievable duty, and utility-equivalent penalty.</li>`);
       }
 
-      if (installedArea < fouledArea || mismatchPct > 10 || uDropPct > 20) {
-        messages.push(`<li><strong>Engineering insight:</strong> This case suggests that fouling, insufficient area, or inconsistent process data may be limiting thermal performance. The next checks should usually include exchanger cleanliness, temperature measurement confidence, correction factor realism, and whether utility conditions have drifted from design.</li>`);
-      } else {
-        messages.push(`<li><strong>Engineering insight:</strong> This exchanger looks reasonably balanced for a first-pass calculation, though a full review should still confirm correction factor, phase behavior, pressure drop, and actual operating history.</li>`);
-      }
+      messages.push(`<li><strong>Scope limit:</strong> This remains a single-phase sensible-heat screening tool. It does not rate condensing or boiling service, and it does not check pressure drop.</li>`);
 
       document.getElementById("interpretationList").innerHTML = messages.join("");
       drawHXChart(hotIn, hotOut, coldIn, coldOut);
@@ -818,6 +903,7 @@
       document.getElementById("uClean").value = 550;
       document.getElementById("uFouled").value = 420;
       document.getElementById("correctionFactor").value = 1.0;
+      document.getElementById("serviceType").value = "single_phase";
       document.getElementById("installedArea").value = 25;
       document.getElementById("energyCost").value = 45;
       document.getElementById("operatingHours").value = 8000;
@@ -849,10 +935,11 @@
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      calculateHX();
+      
     }
 
     calculateHX();
   </script>
 </body>
+
 </html>
