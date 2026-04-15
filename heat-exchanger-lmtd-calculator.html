@@ -428,14 +428,32 @@
           </div>
 
           <div class="field">
-            <label for="serviceType">Service Type</label>
-            <select id="serviceType">
-              <option value="single_phase" selected>Single-phase sensible heat only</option>
-              <option value="condensing">Condensing service (not supported here)</option>
-              <option value="boiling">Boiling / vaporizing service (not supported here)</option>
-              <option value="mixed">Mixed / unknown (not supported here)</option>
+            <label for="calcMode">Calculation Mode</label>
+            <select id="calcMode" onchange="updateHXModeFields();">
+              <option value="sensible_sensible" selected>Sensible hot / sensible cold</option>
+              <option value="condensing_hot">Condensing hot / sensible cold</option>
+              <option value="boiling_cold">Sensible hot / boiling cold</option>
+              <option value="known_duty">Known duty + 4 temperatures</option>
             </select>
-            <small>This calculator only supports single-phase sensible heat screening.</small>
+            <small>Choose the mode that matches your service.</small>
+          </div>
+
+          <div class="field mode-known-duty" style="display:none;">
+            <label for="knownDuty">Known Duty (kW)</label>
+            <input type="number" id="knownDuty" value="" step="any">
+            <small>Used in “Known duty + 4 temperatures” mode</small>
+          </div>
+
+          <div class="field mode-condensing" style="display:none;">
+            <label for="hotCondensingTemp">Hot Condensing Temperature (°C)</label>
+            <input type="number" id="hotCondensingTemp" value="" step="any">
+            <small>Used in condensing hot-side mode</small>
+          </div>
+
+          <div class="field mode-boiling" style="display:none;">
+            <label for="coldBoilingTemp">Cold Boiling Temperature (°C)</label>
+            <input type="number" id="coldBoilingTemp" value="" step="any">
+            <small>Used in boiling cold-side mode</small>
           </div>
 
           <div class="field">
@@ -481,8 +499,13 @@
           </div>
 
           <div class="result-box">
-            <div class="label">Screening Duty</div>
+            <div class="label">Reconciled Screening Duty</div>
             <div class="value" id="qScreenResult">-</div>
+          </div>
+
+          <div class="result-box">
+            <div class="label">Achievable Duty at Installed Area</div>
+            <div class="value" id="achievableDutyResult">-</div>
           </div>
 
           <div class="result-box">
@@ -590,11 +613,71 @@
 
     function calculateLMTD(dt1, dt2) {
       if (dt1 <= 0 || dt2 <= 0) return NaN;
-      if (Math.abs(dt1 - dt2) < 1e-9) return dt1;
+      if (Math.abs(dt1 - dt2) < 1e-6) return dt1;
       return (dt1 - dt2) / Math.log(dt1 / dt2);
     }
 
-    function drawHXChart(hotIn, hotOut, coldIn, coldOut) {
+    function setResult(id, text) {
+      document.getElementById(id).textContent = text;
+    }
+
+    function updateHXModeFields() {
+      const mode = document.getElementById("calcMode").value;
+
+      document.querySelectorAll(".mode-known-duty").forEach(el => {
+        el.style.display = (mode === "known_duty") ? "" : "none";
+      });
+
+      document.querySelectorAll(".mode-condensing").forEach(el => {
+        el.style.display = (mode === "condensing_hot") ? "" : "none";
+      });
+
+      document.querySelectorAll(".mode-boiling").forEach(el => {
+        el.style.display = (mode === "boiling_cold") ? "" : "none";
+      });
+
+      // Base fields visibility
+      const hotFlowFields = ["flowHot", "flowHotUnit", "cpHot", "hotIn", "hotOut"];
+      const coldFlowFields = ["flowCold", "flowColdUnit", "cpCold", "coldIn", "coldOut"];
+
+      // Helper to hide/show parent .field blocks
+      function setFieldVisible(id, visible) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const wrapper = el.closest(".field");
+        if (wrapper) wrapper.style.display = visible ? "" : "none";
+      }
+
+      // Default all shown
+      [...hotFlowFields, ...coldFlowFields].forEach(id => setFieldVisible(id, true));
+
+      if (mode === "condensing_hot") {
+        setFieldVisible("flowHot", false);
+        setFieldVisible("flowHotUnit", false);
+        setFieldVisible("cpHot", false);
+        setFieldVisible("hotIn", false);
+        setFieldVisible("hotOut", false);
+      }
+
+      if (mode === "boiling_cold") {
+        setFieldVisible("flowCold", false);
+        setFieldVisible("flowColdUnit", false);
+        setFieldVisible("cpCold", false);
+        setFieldVisible("coldIn", false);
+        setFieldVisible("coldOut", false);
+      }
+
+      if (mode === "known_duty") {
+        setFieldVisible("flowHot", false);
+        setFieldVisible("flowHotUnit", false);
+        setFieldVisible("cpHot", false);
+        setFieldVisible("flowCold", false);
+        setFieldVisible("flowColdUnit", false);
+        setFieldVisible("cpCold", false);
+      }
+    }
+
+    function drawHXChart(mode, data) {
       const canvas = document.getElementById("hxCanvas");
       const ctx = canvas.getContext("2d");
       const w = canvas.width;
@@ -606,8 +689,18 @@
       const plotW = w - margin.left - margin.right;
       const plotH = h - margin.top - margin.bottom;
 
-      const tMin = Math.min(hotIn, hotOut, coldIn, coldOut) - 10;
-      const tMax = Math.max(hotIn, hotOut, coldIn, coldOut) + 10;
+      let temps = [];
+
+      if (mode === "sensible_sensible" || mode === "known_duty") {
+        temps = [data.hotIn, data.hotOut, data.coldIn, data.coldOut];
+      } else if (mode === "condensing_hot") {
+        temps = [data.hotCondensingTemp, data.hotCondensingTemp, data.coldIn, data.coldOut];
+      } else if (mode === "boiling_cold") {
+        temps = [data.hotIn, data.hotOut, data.coldBoilingTemp, data.coldBoilingTemp];
+      }
+
+      const tMin = Math.min(...temps) - 10;
+      const tMax = Math.max(...temps) + 10;
       const safeSpan = Math.max(1, tMax - tMin);
 
       function xScale(x) {
@@ -636,52 +729,47 @@
       ctx.fillText("Temperature (°C)", 0, 0);
       ctx.restore();
 
-      // Hot stream line
+      // Hot side
       ctx.strokeStyle = "#a00000";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(xScale(0), yScale(hotIn));
-      ctx.lineTo(xScale(1), yScale(hotOut));
+      if (mode === "condensing_hot") {
+        ctx.moveTo(xScale(0), yScale(data.hotCondensingTemp));
+        ctx.lineTo(xScale(1), yScale(data.hotCondensingTemp));
+      } else {
+        ctx.moveTo(xScale(0), yScale(data.hotIn));
+        ctx.lineTo(xScale(1), yScale(data.hotOut));
+      }
       ctx.stroke();
 
-      // Cold stream line
+      // Cold side
       ctx.strokeStyle = "#0b6b2f";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(xScale(0), yScale(coldIn));
-      ctx.lineTo(xScale(1), yScale(coldOut));
+      if (mode === "boiling_cold") {
+        ctx.moveTo(xScale(0), yScale(data.coldBoilingTemp));
+        ctx.lineTo(xScale(1), yScale(data.coldBoilingTemp));
+      } else {
+        ctx.moveTo(xScale(0), yScale(data.coldIn));
+        ctx.lineTo(xScale(1), yScale(data.coldOut));
+      }
       ctx.stroke();
 
       ctx.fillStyle = "#a00000";
       ctx.font = "12px Poppins";
-      ctx.fillText("Hot stream", xScale(0.02), yScale(hotIn) - 8);
+      ctx.fillText("Hot stream", xScale(0.02), yScale(mode === "condensing_hot" ? data.hotCondensingTemp : data.hotIn) - 8);
 
       ctx.fillStyle = "#0b6b2f";
-      ctx.fillText("Cold stream", xScale(0.02), yScale(coldIn) + 18);
-
-      ctx.fillStyle = "#555";
-      ctx.font = "11px Poppins";
-      [hotIn, hotOut, coldIn, coldOut].forEach((t) => {
-        const y = yScale(t);
-        ctx.beginPath();
-        ctx.moveTo(margin.left - 4, y);
-        ctx.lineTo(margin.left, y);
-        ctx.strokeStyle = "#003366";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.fillText(fmt(t, 0), margin.left - 38, y + 4);
-      });
+      ctx.fillText("Cold stream", xScale(0.02), yScale(mode === "boiling_cold" ? data.coldBoilingTemp : data.coldIn) + 18);
 
       ctx.fillStyle = "#333";
       ctx.fillText("Inlet", xScale(0) - 10, margin.top + plotH + 18);
       ctx.fillText("Outlet", xScale(1) - 16, margin.top + plotH + 18);
     }
 
-    function setResult(id, text) {
-      document.getElementById(id).textContent = text;
-    }
-
     function calculateHX() {
+      const mode = document.getElementById("calcMode").value;
+
       const flowHot = parseFloat(document.getElementById("flowHot").value);
       const flowHotUnit = document.getElementById("flowHotUnit").value;
       const cpHot = parseFloat(document.getElementById("cpHot").value);
@@ -694,10 +782,13 @@
       const coldIn = parseFloat(document.getElementById("coldIn").value);
       const coldOut = parseFloat(document.getElementById("coldOut").value);
 
+      const knownDuty = parseFloat(document.getElementById("knownDuty").value);
+      const hotCondensingTemp = parseFloat(document.getElementById("hotCondensingTemp").value);
+      const coldBoilingTemp = parseFloat(document.getElementById("coldBoilingTemp").value);
+
       const uClean = parseFloat(document.getElementById("uClean").value);
       const uFouled = parseFloat(document.getElementById("uFouled").value);
       const correctionFactor = parseFloat(document.getElementById("correctionFactor").value);
-      const serviceType = document.getElementById("serviceType").value;
 
       const installedAreaRaw = document.getElementById("installedArea").value.trim();
       const installedArea = installedAreaRaw === "" ? null : parseFloat(installedAreaRaw);
@@ -706,21 +797,13 @@
       const operatingHours = parseFloat(document.getElementById("operatingHours").value);
 
       if (
-        !isFinite(flowHot) || flowHot <= 0 ||
-        !isFinite(cpHot) || cpHot <= 0 ||
-        !isFinite(hotIn) ||
-        !isFinite(hotOut) ||
-        !isFinite(flowCold) || flowCold <= 0 ||
-        !isFinite(cpCold) || cpCold <= 0 ||
-        !isFinite(coldIn) ||
-        !isFinite(coldOut) ||
         !isFinite(uClean) || uClean <= 0 ||
         !isFinite(uFouled) || uFouled <= 0 ||
         !isFinite(correctionFactor) || correctionFactor <= 0 || correctionFactor > 1.0 ||
         !isFinite(energyCost) || energyCost < 0 ||
         !isFinite(operatingHours) || operatingHours < 0
       ) {
-        alert("Please enter valid values. F must be > 0 and <= 1.0.");
+        alert("Please enter valid U, F, energy cost, and operating hours values.");
         return;
       }
 
@@ -729,136 +812,173 @@
         return;
       }
 
-      if (serviceType !== "single_phase") {
-        alert("This calculator version supports only single-phase sensible heat service.");
+      let qHotKW = null;
+      let qColdKW = null;
+      let qScreenKW = null;
+      let mismatchPct = null;
+      let dt1 = null;
+      let dt2 = null;
+      let lmtd = null;
+      let correctedDT = null;
+      let cleanArea = null;
+      let fouledArea = null;
+      let achievableQkW = null;
+      let thermalLossKW = 0;
+      let lossValueYear = 0;
+      let areaUtilization = null;
+      const messages = [];
+
+      if (mode === "sensible_sensible") {
+        if (
+          !isFinite(flowHot) || flowHot <= 0 ||
+          !isFinite(cpHot) || cpHot <= 0 ||
+          !isFinite(hotIn) || !isFinite(hotOut) ||
+          !isFinite(flowCold) || flowCold <= 0 ||
+          !isFinite(cpCold) || cpCold <= 0 ||
+          !isFinite(coldIn) || !isFinite(coldOut)
+        ) {
+          alert("Please enter all sensible/sensible inputs.");
+          return;
+        }
+
+        if (!(hotIn > hotOut) || !(coldOut > coldIn)) {
+          alert("Hot stream must cool down and cold stream must heat up.");
+          return;
+        }
+
+        const mHot = flowToKgS(flowHot, flowHotUnit);
+        const mCold = flowToKgS(flowCold, flowColdUnit);
+
+        qHotKW = mHot * cpHot * (hotIn - hotOut);
+        qColdKW = mCold * cpCold * (coldOut - coldIn);
+        mismatchPct = Math.abs(qHotKW - qColdKW) / Math.max(qHotKW, qColdKW) * 100;
+        qScreenKW = (qHotKW + qColdKW) / 2;
+
+        dt1 = hotIn - coldOut;
+        dt2 = hotOut - coldIn;
+
+        if (mismatchPct > 10) {
+          messages.push(`<li><span class="warning">Low confidence:</span> Hot-side and cold-side duties differ by ${fmt(mismatchPct, 1)}%. Results are shown, but duty reconciliation is approximate.</li>`);
+        } else if (mismatchPct > 5) {
+          messages.push(`<li><span class="warning">Moderate confidence:</span> Duty mismatch is ${fmt(mismatchPct, 1)}%.</li>`);
+        } else {
+          messages.push(`<li><span class="good">Good confidence:</span> Hot-side and cold-side duties are reasonably aligned.</li>`);
+        }
+      }
+
+      if (mode === "condensing_hot") {
+        if (
+          !isFinite(hotCondensingTemp) ||
+          !isFinite(flowCold) || flowCold <= 0 ||
+          !isFinite(cpCold) || cpCold <= 0 ||
+          !isFinite(coldIn) || !isFinite(coldOut)
+        ) {
+          alert("Please enter condensing temperature and cold-side inputs.");
+          return;
+        }
+
+        if (!(coldOut > coldIn)) {
+          alert("Cold stream must heat up.");
+          return;
+        }
+
+        const mCold = flowToKgS(flowCold, flowColdUnit);
+        qColdKW = mCold * cpCold * (coldOut - coldIn);
+        qScreenKW = qColdKW;
+
+        dt1 = hotCondensingTemp - coldOut;
+        dt2 = hotCondensingTemp - coldIn;
+
+        messages.push(`<li><span class="good">Condensing mode:</span> Duty is taken from the sensible cold side.</li>`);
+      }
+
+      if (mode === "boiling_cold") {
+        if (
+          !isFinite(coldBoilingTemp) ||
+          !isFinite(flowHot) || flowHot <= 0 ||
+          !isFinite(cpHot) || cpHot <= 0 ||
+          !isFinite(hotIn) || !isFinite(hotOut)
+        ) {
+          alert("Please enter boiling temperature and hot-side inputs.");
+          return;
+        }
+
+        if (!(hotIn > hotOut)) {
+          alert("Hot stream must cool down.");
+          return;
+        }
+
+        const mHot = flowToKgS(flowHot, flowHotUnit);
+        qHotKW = mHot * cpHot * (hotIn - hotOut);
+        qScreenKW = qHotKW;
+
+        dt1 = hotIn - coldBoilingTemp;
+        dt2 = hotOut - coldBoilingTemp;
+
+        messages.push(`<li><span class="good">Boiling mode:</span> Duty is taken from the sensible hot side.</li>`);
+      }
+
+      if (mode === "known_duty") {
+        if (
+          !isFinite(knownDuty) || knownDuty <= 0 ||
+          !isFinite(hotIn) || !isFinite(hotOut) ||
+          !isFinite(coldIn) || !isFinite(coldOut)
+        ) {
+          alert("Please enter known duty and all four temperatures.");
+          return;
+        }
+
+        qScreenKW = knownDuty;
+        dt1 = hotIn - coldOut;
+        dt2 = hotOut - coldIn;
+
+        messages.push(`<li><span class="good">Known duty mode:</span> Area is based directly on entered duty.</li>`);
+      }
+
+      if (!isFinite(dt1) || !isFinite(dt2) || dt1 <= 0 || dt2 <= 0) {
+        alert("Invalid terminal temperature differences. Check the entered temperatures.");
         return;
       }
 
-      if (!(hotIn > hotOut)) {
-        alert("Hot stream must cool down in this calculator.");
-        return;
-      }
-
-      if (!(coldOut > coldIn)) {
-        alert("Cold stream must heat up in this calculator.");
-        return;
-      }
-
-      if (!(hotIn > coldIn)) {
-        alert("Hot inlet temperature must be above cold inlet temperature.");
-        return;
-      }
-
-      const mHot = flowToKgS(flowHot, flowHotUnit);
-      const mCold = flowToKgS(flowCold, flowColdUnit);
-
-      const qHotKW = mHot * cpHot * (hotIn - hotOut);
-      const qColdKW = mCold * cpCold * (coldOut - coldIn);
-
-      if (qHotKW <= 0 || qColdKW <= 0) {
-        alert("Calculated duties must be positive. Check inputs.");
-        return;
-      }
-
-      const mismatchPct = Math.abs(qHotKW - qColdKW) / Math.max(qHotKW, qColdKW) * 100;
-
-      // Counter-current screening only
-      const dt1 = hotIn - coldOut;
-      const dt2 = hotOut - coldIn;
-
-      if (dt1 <= 0 || dt2 <= 0) {
-        alert("Invalid counter-current terminal temperature differences. Check approach temperatures.");
-        return;
-      }
-
-      const lmtd = calculateLMTD(dt1, dt2);
-      const correctedDT = lmtd * correctionFactor;
+      lmtd = calculateLMTD(dt1, dt2);
+      correctedDT = lmtd * correctionFactor;
 
       if (!isFinite(lmtd) || lmtd <= 0 || !isFinite(correctedDT) || correctedDT <= 0) {
         alert("Invalid LMTD result. Check temperatures and correction factor.");
         return;
       }
 
-      // Only use average duty when mismatch is not too large
-      if (mismatchPct > 10) {
-        setResult("qHotResult", fmt(qHotKW, 1) + " kW");
-        setResult("qColdResult", fmt(qColdKW, 1) + " kW");
-        setResult("qScreenResult", "Blocked");
-        setResult("mismatchResult", fmt(mismatchPct, 1) + "%");
-        setResult("dt1Result", fmt(dt1, 1) + " °C");
-        setResult("dt2Result", fmt(dt2, 1) + " °C");
-        setResult("lmtdResult", fmt(lmtd, 1) + " °C");
-        setResult("correctedDtResult", fmt(correctedDT, 1) + " °C");
-        setResult("cleanAreaResult", "Blocked");
-        setResult("fouledAreaResult", "Blocked");
-        setResult("utilizationResult", "-");
-        setResult("lossValueResult", "-");
-
-        document.getElementById("interpretationList").innerHTML = `
-        <li><span class="bad">Duty mismatch too large:</span> Hot-side and cold-side duties differ by ${fmt(mismatchPct, 1)}%.</li>
-        <li>Area-based conclusions are blocked until flow, Cp, and temperature data are reconciled.</li>
-        <li>This avoids false confidence from averaging inconsistent data.</li>
-      `;
-
-        drawHXChart(hotIn, hotOut, coldIn, coldOut);
-        return;
-      }
-
-      const qScreenKW = (qHotKW + qColdKW) / 2;
-      const qW = qScreenKW * 1000;
-
-      const cleanArea = qW / (uClean * correctedDT);
-      const fouledArea = qW / (uFouled * correctedDT);
-
-      let areaUtilizationText = "-";
-      let penaltyText = "-";
-      let areaUtilization = null;
-      let achievableQkW = null;
-      let thermalLossKW = 0;
-      let lossValueYear = 0;
+      cleanArea = (qScreenKW * 1000) / (uClean * correctedDT);
+      fouledArea = (qScreenKW * 1000) / (uFouled * correctedDT);
 
       if (installedArea !== null) {
-        areaUtilization = (fouledArea / installedArea) * 100;
         achievableQkW = (installedArea * uFouled * correctedDT) / 1000;
         thermalLossKW = Math.max(0, qScreenKW - achievableQkW);
         lossValueYear = (thermalLossKW / 1000) * operatingHours * energyCost;
-
-        areaUtilizationText = fmt(areaUtilization, 1) + "%";
-        penaltyText = "$" + fmt(lossValueYear, 0) + "/yr";
+        areaUtilization = (fouledArea / installedArea) * 100;
       }
 
-      setResult("qHotResult", fmt(qHotKW, 1) + " kW");
-      setResult("qColdResult", fmt(qColdKW, 1) + " kW");
+      setResult("qHotResult", isFinite(qHotKW) ? fmt(qHotKW, 1) + " kW" : "-");
+      setResult("qColdResult", isFinite(qColdKW) ? fmt(qColdKW, 1) + " kW" : "-");
       setResult("qScreenResult", fmt(qScreenKW, 1) + " kW");
-      setResult("mismatchResult", fmt(mismatchPct, 1) + "%");
+      setResult("achievableDutyResult", isFinite(achievableQkW) ? fmt(achievableQkW, 1) + " kW" : "-");
+      setResult("mismatchResult", isFinite(mismatchPct) ? fmt(mismatchPct, 1) + "%" : "-");
       setResult("dt1Result", fmt(dt1, 1) + " °C");
       setResult("dt2Result", fmt(dt2, 1) + " °C");
       setResult("lmtdResult", fmt(lmtd, 1) + " °C");
       setResult("correctedDtResult", fmt(correctedDT, 1) + " °C");
       setResult("cleanAreaResult", fmt(cleanArea, 2) + " m²");
       setResult("fouledAreaResult", fmt(fouledArea, 2) + " m²");
-      setResult("utilizationResult", areaUtilizationText);
-      setResult("lossValueResult", penaltyText);
-
-      const messages = [];
-
-      if (mismatchPct > 5) {
-        messages.push(`<li><span class="warning">Moderate duty mismatch:</span> Hot-side and cold-side duties differ by ${fmt(mismatchPct, 1)}%. Results are still shown, but data quality should be checked.</li>`);
-      } else {
-        messages.push(`<li><span class="good">Thermal balance is reasonable:</span> Hot-side and cold-side duties are broadly consistent for screening use.</li>`);
-      }
+      setResult("utilizationResult", isFinite(areaUtilization) ? fmt(areaUtilization, 1) + "%" : "-");
+      setResult("lossValueResult", isFinite(lossValueYear) ? "$" + fmt(lossValueYear, 0) + "/yr" : "-");
 
       if (dt1 < 10 || dt2 < 10) {
-        messages.push(`<li><span class="warning">Tight terminal approach:</span> One terminal temperature difference is small. Area sensitivity is high.</li>`);
-      } else {
-        messages.push(`<li><span class="good">Terminal approaches are not unusually tight:</span> Counter-current screening looks workable.</li>`);
+        messages.push(`<li><span class="warning">Tight terminal approach:</span> One terminal difference is small, so area sensitivity is high.</li>`);
       }
 
       const uDropPct = ((uClean - uFouled) / uClean) * 100;
       if (uDropPct > 25) {
         messages.push(`<li><span class="warning">Large assumed U degradation:</span> Clean-to-fouled U drops by about ${fmt(uDropPct, 1)}%.</li>`);
-      } else {
-        messages.push(`<li><span class="good">Fouling allowance is moderate:</span> The assumed U reduction is not extreme.</li>`);
       }
 
       if (installedArea !== null) {
@@ -869,22 +989,24 @@
         } else if (areaUtilization > 85) {
           messages.push(`<li><span class="warning">Limited fouled margin:</span> Installed area is close to the required fouled area.</li>`);
         } else {
-          messages.push(`<li><span class="good">Installed area appears adequate:</span> There is visible margin under the fouled-U assumption.</li>`);
+          messages.push(`<li><span class="good">Installed area appears adequate:</span> Margin exists under the fouled-U assumption.</li>`);
         }
 
         if (thermalLossKW > 0) {
-          messages.push(`<li><strong>Estimated utility-equivalent penalty:</strong> About <strong>$${fmt(lossValueYear, 0)}/year</strong>, based only on entered utility value and operating hours.</li>`);
-        } else {
-          messages.push(`<li><span class="good">No thermal shortfall at installed area:</span> Based on the entered fouled U and installed area, the exchanger is not short of duty.</li>`);
+          messages.push(`<li><strong>Estimated utility-equivalent penalty:</strong> About <strong>$${fmt(lossValueYear, 0)}/year</strong>, based on entered duty, U, area, utility value, and operating hours.</li>`);
         }
       } else {
-        messages.push(`<li><strong>Installed-area check not performed:</strong> Add installed area to assess utilization, achievable duty, and utility-equivalent penalty.</li>`);
+        messages.push(`<li><strong>Installed-area check not performed:</strong> Add installed area to assess utilization, achievable duty, and shortfall.</li>`);
       }
 
-      messages.push(`<li><strong>Scope limit:</strong> This remains a single-phase sensible-heat screening tool. It does not rate condensing or boiling service, and it does not check pressure drop.</li>`);
+      messages.push(`<li><strong>Scope limit:</strong> This is still a screening calculator, not a full exchanger rating tool.</li>`);
 
       document.getElementById("interpretationList").innerHTML = messages.join("");
-      drawHXChart(hotIn, hotOut, coldIn, coldOut);
+
+      drawHXChart(mode, {
+        hotIn, hotOut, coldIn, coldOut,
+        hotCondensingTemp, coldBoilingTemp
+      });
     }
 
     function resetHXCalculator() {
@@ -900,10 +1022,14 @@
       document.getElementById("coldIn").value = 40;
       document.getElementById("coldOut").value = 70;
 
+      document.getElementById("calcMode").value = "sensible_sensible";
+      document.getElementById("knownDuty").value = "";
+      document.getElementById("hotCondensingTemp").value = "";
+      document.getElementById("coldBoilingTemp").value = "";
+
       document.getElementById("uClean").value = 550;
       document.getElementById("uFouled").value = 420;
       document.getElementById("correctionFactor").value = 1.0;
-      document.getElementById("serviceType").value = "single_phase";
       document.getElementById("installedArea").value = 25;
       document.getElementById("energyCost").value = 45;
       document.getElementById("operatingHours").value = 8000;
@@ -913,6 +1039,7 @@
         "qHotResult",
         "qColdResult",
         "qScreenResult",
+        "achievableDutyResult",
         "mismatchResult",
         "dt1Result",
         "dt2Result",
@@ -935,10 +1062,10 @@
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      
+      updateHXModeFields();
     }
 
-    calculateHX();
+    updateHXModeFields();
   </script>
 </body>
 
